@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - portal</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="main.css">
+		<style>
+			body {
+				color: #444;
+			}
+			a {
+				color: #08f;
+				}
+			#webcam {
+				position: absolute;
+				top: 10px;
+				left: 10px;
+				/* width: 320px;
+				height: 240px; */
+				border: 2px solid #444;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div id="container"></div>
+		<div id="info"><a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - portal
+		</div>
+        <video playsinline width="320" height="240"></video>
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "https://unpkg.com/three@0.150.1/build/three.module.js",
+					"three/addons/": "https://unpkg.com/three@0.150.1/examples/jsm/"
+				}
+			}
+		</script>
+
+			<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+			<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet"></script>
+
+		<script type="module">
+
+			import * as THREE from 'https://unpkg.com/three@0.150.1/build/three.module.js';
+
+			import * as CameraUtils from 'https://unpkg.com/three@0.150.1/examples/jsm/utils/CameraUtils.js';
+			import { OrbitControls } from 'https://unpkg.com/three@0.150.1/examples/jsm/controls/OrbitControls.js';
+			import { TransformControls } from 'https://unpkg.com/three@0.150.1/examples/jsm/controls/TransformControls.js';
+
+			let camera, scene, renderer;
+
+			let cameraControls;
+			let transformControls;
+
+			let portalCamera, leftPortal, rightPortal, leftPortalTexture, reflectedPosition,
+				rightPortalTexture, bottomLeftCorner, bottomRightCorner, topLeftCorner;
+
+			let frustumHelper;
+
+			let isPortalCameraActive = false;
+
+			let net, video;
+
+			async function loadPosenet() {
+				net = await posenet.load();
+			}
+
+			async function getHeadPosition() {
+				try {
+					video.play();
+					const pose = await net.estimateSinglePose(video, { flipHorizontal: false });
+					const keypoint = pose.keypoints.find(k => k.part === 'nose');
+					if (keypoint && keypoint.score > 0.5) {
+						return keypoint.position;
+					} else {
+						throw new Error('Head position not detected');
+					}
+				} catch (error) {
+					throw error;
+				}
+			}
+
+			init();
+
+			async function init() {
+				await loadPosenet();
+
+				const container = document.getElementById( 'container' );
+
+				// renderer
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setAnimationLoop( animate );
+				renderer.localClippingEnabled = true;
+				renderer.toneMapping = THREE.ACESFilmicToneMapping;
+				container.appendChild( renderer.domElement );
+
+				// scene
+				scene = new THREE.Scene();
+
+				// camera
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 5000 );
+				camera.position.set( 0, 75, 160 );
+
+				cameraControls = new OrbitControls( camera, renderer.domElement );
+				cameraControls.target.set( 0, 40, 0 );
+				cameraControls.maxDistance = 400;
+				cameraControls.minDistance = 10;
+				cameraControls.update();
+
+				//another camera for the portal
+                portalCamera = new THREE.PerspectiveCamera( 45, 1.0, 0.1, 500.0 );
+                scene.add( portalCamera );
+                frustumHelper = new THREE.CameraHelper( portalCamera );
+
+				const planeGeo = new THREE.PlaneGeometry( 100.1, 100.1 );
+
+				// portals
+				portalCamera = new THREE.PerspectiveCamera( 45, 1.0, 0.1, 500.0 );
+				scene.add( portalCamera );
+				frustumHelper = new THREE.CameraHelper( portalCamera );
+				scene.add( frustumHelper );
+				bottomLeftCorner = new THREE.Vector3();
+				bottomRightCorner = new THREE.Vector3();
+				topLeftCorner = new THREE.Vector3();
+				reflectedPosition = new THREE.Vector3();
+
+				leftPortalTexture = new THREE.WebGLRenderTarget( 1080, 1080 );
+				leftPortal = new THREE.Mesh( planeGeo, new THREE.MeshBasicMaterial( { map: leftPortalTexture.texture } ) );
+				leftPortal.position.x = - 30;
+				leftPortal.position.y = 20;
+				leftPortal.scale.set( 0.35, 0.35, 0.35 );
+				scene.add( leftPortal );
+
+				// walls
+				const planeTop = new THREE.Mesh( planeGeo, new THREE.MeshPhongMaterial( { color: 0xffffff } ) );
+				planeTop.position.y = 100;
+				planeTop.rotateX( Math.PI / 2 );
+				scene.add( planeTop );
+
+				const planeBottom = new THREE.Mesh( planeGeo, new THREE.MeshPhongMaterial( { color: 0xffffff } ) );
+				planeBottom.rotateX( - Math.PI / 2 );
+				scene.add( planeBottom );
+
+				const planeFront = new THREE.Mesh( planeGeo, new THREE.MeshPhongMaterial( { color: 0x7f7fff } ) );
+				planeFront.position.z = 50;
+				planeFront.position.y = 50;
+				planeFront.rotateY( Math.PI );
+				scene.add( planeFront );
+
+				const planeBack = new THREE.Mesh( planeGeo, new THREE.MeshPhongMaterial( { color: 0xff7fff } ) );
+				planeBack.position.z = - 50;
+				planeBack.position.y = 50;
+				//planeBack.rotateY( Math.PI );
+				scene.add( planeBack );
+
+				const planeRight = new THREE.Mesh( planeGeo, new THREE.MeshPhongMaterial( { color: 0x00ff00 } ) );
+				planeRight.position.x = 50;
+				planeRight.position.y = 50;
+				planeRight.rotateY( - Math.PI / 2 );
+				scene.add( planeRight );
+
+				const planeLeft = new THREE.Mesh( planeGeo, new THREE.MeshPhongMaterial( { color: 0xff0000 } ) );
+				planeLeft.position.x = - 50;
+				planeLeft.position.y = 50;
+				planeLeft.rotateY( Math.PI / 2 );
+				scene.add( planeLeft );
+
+				// lights
+				const mainLight = new THREE.PointLight( 0xe7e7e7, 2.5, 250, 0 );
+				mainLight.position.y = 60;
+				scene.add( mainLight );
+
+				const greenLight = new THREE.PointLight( 0x00ff00, 0.5, 1000, 0 );
+				greenLight.position.set( 550, 50, 0 );
+				scene.add( greenLight );
+
+				const redLight = new THREE.PointLight( 0xff0000, 0.5, 1000, 0 );
+				redLight.position.set( - 550, 50, 0 );
+				scene.add( redLight );
+
+				const blueLight = new THREE.PointLight( 0xbbbbfe, 0.5, 1000, 0 );
+				blueLight.position.set( 0, 50, 550 );
+				scene.add( blueLight );
+
+				// Add transform controls for the portal camera
+				transformControls = new TransformControls(camera, renderer.domElement);
+				transformControls.attach(portalCamera);
+				scene.add(transformControls);
+
+				// Disable orbit controls while using transform controls
+				transformControls.addEventListener('dragging-changed', function (event) {
+					cameraControls.enabled = !event.value;
+				});
+
+				// Add webcam video element
+				video = document.createElement('video');
+				video.id = 'webcam';
+                video.width = 320;
+                video.height = 240;
+				document.body.appendChild(video);
+
+				const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+				video.srcObject = stream;
+				video.play();
+
+				window.addEventListener( 'resize', onWindowResize );
+				window.addEventListener('keydown', onKeyDown);
+
+			}
+
+			function renderPortal(thisPortalMesh, thisPortalTexture) {
+				// Calculate the corners of the portal in world space
+				thisPortalMesh.updateMatrixWorld();
+				thisPortalMesh.geometry.computeBoundingBox();
+				const bbox = thisPortalMesh.geometry.boundingBox.clone();
+				bbox.applyMatrix4(thisPortalMesh.matrixWorld);
+
+				bottomLeftCorner.set(bbox.min.x, bbox.min.y, bbox.min.z);
+				bottomRightCorner.set(bbox.max.x, bbox.min.y, bbox.min.z);
+				topLeftCorner.set(bbox.min.x, bbox.max.y, bbox.min.z);
+
+				// Frame the corners using CameraUtils
+				CameraUtils.frameCorners(portalCamera, bottomLeftCorner, bottomRightCorner, topLeftCorner, false);
+
+				// Render the scene from the portal camera's perspective
+				const currentRenderTarget = renderer.getRenderTarget();
+				renderer.setRenderTarget(thisPortalTexture);
+				renderer.state.buffers.depth.setMask(true); // Ensure the depth buffer is writable
+				if (renderer.autoClear === false) renderer.clear();
+				thisPortalMesh.visible = false; // Hide this portal from its own rendering
+				renderer.render(scene, portalCamera);
+				thisPortalMesh.visible = true; // Re-enable this portal's visibility for general rendering
+				renderer.setRenderTarget(currentRenderTarget);
+			}
+
+            function renderOffaxis(thisPortalMesh){
+                // Calculate the corners of the portal in world space
+                thisPortalMesh.updateMatrixWorld();
+                thisPortalMesh.geometry.computeBoundingBox();
+                const bbox = thisPortalMesh.geometry.boundingBox.clone();
+                bbox.applyMatrix4(thisPortalMesh.matrixWorld);
+
+                bottomLeftCorner.set(bbox.min.x, bbox.min.y, bbox.min.z);
+                bottomRightCorner.set(bbox.max.x, bbox.min.y, bbox.min.z);
+                topLeftCorner.set(bbox.min.x, bbox.max.y, bbox.min.z);
+				thisPortalMesh.visible = false; // Hide this portal from its own rendering
+                // Frame the corners using CameraUtils
+                CameraUtils.frameCorners(portalCamera, bottomLeftCorner, bottomRightCorner, topLeftCorner, false);
+
+            }
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			async function onKeyDown(event) {
+				const step = 5;
+				switch (event.key) {
+					case 'ArrowUp':
+						portalCamera.position.y += step;
+						break;
+					case 'ArrowDown':
+						portalCamera.position.y -= step;
+						break;
+					case 'ArrowLeft':
+						portalCamera.position.x -= step;
+						break;
+					case 'ArrowRight':
+						portalCamera.position.x += step;
+						break;
+					case 'w':
+						portalCamera.position.z -= step;
+						break;
+					case 's':
+						portalCamera.position.z += step;
+						break;
+					case 'g':
+						if (isPortalCameraActive) {
+							camera.position.set(0, 75, 160);
+							camera.rotation.set(0, 0, 0);
+                            CameraUtils.frameCorners(camera, bottomLeftCorner, bottomRightCorner, topLeftCorner, false);
+							camera.updateProjectionMatrix();
+							isPortalCameraActive = false;
+						} else {
+							camera.position.copy(portalCamera.position);
+							camera.rotation.copy(portalCamera.rotation);
+							camera.updateProjectionMatrix();
+							isPortalCameraActive = true;
+						}
+						break;
+					case 'h':
+						try {
+							if (video.readyState >= 2) {
+								const position = await getHeadPosition();
+                                // get the center position of portal
+                                const portalCenter = new THREE.Vector3();
+                                leftPortal.getWorldPosition(portalCenter);
+                                //set the portal camera position using head position
+                                let posX = portalCenter.x - position.x + 160;
+                                let posY = portalCenter.y - position.y + 120;
+                                let coef = 0.5;
+                                posX *= coef;
+                                posY *= coef;
+                                portalCamera.position.set(posX, posY, portalCenter.z + 30);
+
+								// console.log('Head Position:', position);
+							} else {
+								video.onloadedmetadata = async () => {
+									// position = await getHeadPosition();
+									// console.log('Head Position:', position);
+								};
+							}
+						} catch (error) {
+							console.error('Error getting head position:', error);
+						}
+						break;
+                    case 'v':
+                        visualizeCameraPlane(camera);
+                        break;
+				}
+			}
+            function visualizeCameraPlane(camera) {
+                const near = camera.near;
+                const fov = camera.fov * (Math.PI / 180); // convert to radians
+                const aspect = camera.aspect;
+
+                const height = 2 * Math.tan(fov / 2) * near;
+                const width = height * aspect;
+                console.log('Camera height:', height, 'width:', width);
+
+                const planeGeometry = new THREE.PlaneGeometry(width, height);
+                const planeMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
+                const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+                console.log('Camera position:', camera.position);
+                plane.rotation.set(camera.rotation.x, camera.rotation.y, camera.rotation.z);
+
+                plane.position.set(camera.position.x, camera.position.y, camera.position.z - near);
+                scene.add(plane);
+                // scene.add(camera);
+            }
+			function animate() {
+					// Save the original camera properties
+					const currentRenderTarget = renderer.getRenderTarget();
+					const currentXrEnabled = renderer.xr.enabled;
+					const currentShadowAutoUpdate = renderer.shadowMap.autoUpdate;
+					renderer.xr.enabled = false; // Avoid camera modification
+					renderer.shadowMap.autoUpdate = false; // Avoid re-computing shadows
+
+					// renderPortal(leftPortal, leftPortalTexture);
+                    renderOffaxis(leftPortal);  
+					if (isPortalCameraActive) {
+						renderer.render(scene, portalCamera);
+					} else {
+						renderer.render(scene, camera);
+					}
+
+					frustumHelper.update();
+
+					// Restore the original rendering properties
+					renderer.xr.enabled = currentXrEnabled;
+					renderer.shadowMap.autoUpdate = currentShadowAutoUpdate;
+					renderer.setRenderTarget(currentRenderTarget);
+				}
+
+		</script>
+	</body>
+</html>
