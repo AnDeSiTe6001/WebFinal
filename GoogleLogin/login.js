@@ -1,5 +1,29 @@
-const SignUpTable = document.getElementById("register");
+const GoogleLoginBtn = document.getElementById("google_login");
+/*GoogleLoginBtn.addEventListener("click", function (event) {
+  console.log("click");
+  event.preventDefault();
+  fetch("http://localhost/GoogleLogin/API/GoogleLogin.php", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+  })
+    .then((response) => {
+      if (!response.ok) throw new Error("Network response was not OK");
+      return response.json();
+    })
+    .then((data) => {
+      if (data.redirect) {
+        //alert(data.message);
+        window.location.href = data.redirect;
+      } else {
+        console.error("Unexpected response format:", data);
+        alert("Unexpected response from server.");
+      }
+    });
+});*/
 
+const SignUpTable = document.getElementById("register");
 const SignUpBtn = document.getElementById("SignUpBtn");
 SignUpBtn.addEventListener("click", function () {
   SignUpTable.style.display = "flex";

@@ -2,14 +2,11 @@
   session_start();
   if($_SESSION['Login_Method'] == 'Google'){
     require_once 'GoogleLogin.php';
-    $userinfo = GoogleLoginEvent(); 
+    $userinfo = @GoogleLoginEvent(); 
   }else{
-    require_once 'GetInfo.php';
-    $userinfo = GetInfo();
+    require_once 'API/GetInfo.php';
+    $userinfo = @GetInfo($_SESSION['Login_Name']);
   }
-  
-  
-  
 ?>
 
 <!DOCTYPE html>
@@ -24,14 +21,18 @@
 
 <body>
   <ul>
-    <li>Full Name: <?= $userinfo['full_name'] ?></li>
-    <li>Email Address: <?= $userinfo['email'] ?></li>
-    <li>Gender: <?= $userinfo['gender'] ?></li>
+    <li>Full Name: <?php echo htmlspecialchars($userinfo['full_name']) ?></li>
+    <li>Email Address: <?php echo  htmlspecialchars($userinfo['email']) ?></li>
+    <li>MaxScore: <?php echo  htmlspecialchars($userinfo['MaxScore']) ?></li>
+    <li>MaxHitRate: <?php echo  htmlspecialchars($userinfo['MaxHitRate']) ?></li>
+    <li>havePlayed: <?php echo  htmlspecialchars($userinfo['havePlayed']) ?></li>
+    <li id="PlayerID">ID: <?php echo  htmlspecialchars($userinfo['PlayerID']) ?></li>
+    
     <li><a href="logout.php">Logout</a></li>
   </ul>
   <button id="log">Log</button>
 
-  <script src="game.js"></script>
+  <script type="module" src="game.js"></script>
 </body>
 
 </html>

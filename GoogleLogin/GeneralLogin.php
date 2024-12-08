@@ -1,7 +1,7 @@
 <?php
 
-require_once 'config.php';
-
+require_once 'API/config.php';
+$conn = Connect2Database();
 // Determine Request Method
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -35,11 +35,26 @@ if ($method === 'POST') { // create account
                         $sql = "INSERT INTO users (email, full_name, Password) VALUES ('{$_POST['email']}', '{$_POST['name']}', '{$_POST['password']}')";
                         $result = mysqli_query($conn, $sql);
                         if ($result) {
+                            $sql = "SELECT id FROM users WHERE full_name = ?";
+                            $stmt = mysqli_prepare($conn, $sql);
+                            mysqli_stmt_bind_param($stmt, "s", $_POST['name']);
+                            mysqli_stmt_execute($stmt);
+                            $result = mysqli_stmt_get_result($stmt);
+                            $row = mysqli_fetch_assoc($result);
+                            
+                            $id = $row['id'];
+                            $sql = "INSERT INTO userrecord (full_name, PlayerID) VALUES (?,?)";
+                            $stmt = mysqli_prepare($conn, $sql);
+                            mysqli_stmt_bind_param($stmt, "si",$_POST['name'],$id);
+                            mysqli_stmt_execute($stmt);
+
                             header("Content-Type: application/json");
                             $msg = ['message' => "Success.", 'redirect' => "game.php"];
                             echo json_encode($msg);
                             $_SESSION['Login_Method'] = 'General';
-                            $_SESSION['Login_Name'] = $_POST['name'];
+                            $_SESSION['Login_Name'] = $_POST['email'];
+                            
+
                             exit;
                         } else {
                             header("Content-Type: application/json");
@@ -75,21 +90,20 @@ if ($method === 'POST') { // create account
                     mysqli_stmt_bind_param($stmt, "s", $email);
                     mysqli_stmt_execute($stmt);
                     $result = mysqli_stmt_get_result($stmt);
-
                     $row = mysqli_fetch_assoc($result);
 
                     if($_GET['password'] === $row['Password']){
                         $_SESSION['Login_Method'] = 'General';
 
-                        $sql = "SELECT full_name FROM users WHERE email = ?";
+                        /*$sql = "SELECT full_name FROM users WHERE email = ?";
                         $stmt = mysqli_prepare($conn, $sql);
                         mysqli_stmt_bind_param($stmt, "s", $email);
                         mysqli_stmt_execute($stmt);
                         $result = mysqli_stmt_get_result($stmt);
                         
-                        $row = mysqli_fetch_assoc($result);
+                        $row = mysqli_fetch_assoc($result);*/
 
-                        $_SESSION['Login_Name'] = $row['full_name'];
+                        $_SESSION['Login_Name'] = $email;
 
                         header("Content-Type: application/json");
                         $msg = ['message' => "Success.", 'redirect' => "game.php"];
