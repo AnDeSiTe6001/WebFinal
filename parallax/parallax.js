@@ -91,10 +91,10 @@ function addRandomObjects() {
 }
 
 function setupCameras() {
-    orbitalCamera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 5000);
+    orbitalCamera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 5000);
     orbitalCamera.position.set(0, 75, 160);
 
-    gameCamera = new THREE.PerspectiveCamera(45, 1.0, 0.1, 500.0);
+    gameCamera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 5000);
     gameCamera.position.set(0, 75, 160);
     scene.add(gameCamera);
 

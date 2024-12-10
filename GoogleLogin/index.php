@@ -8,8 +8,8 @@
   </head>
   <body>
   <?php
-    require_once 'config.php';
-
+    require_once 'API/config.php';
+    //session_start();
     if (isset($_SESSION['user_token'])) {
       header("Location: game.php");
     } 
@@ -67,7 +67,7 @@
         <p class="p line">Or With</p>
 
         <div class="flex-row">
-          <button class="btn google" id="google_login" onclick="event.preventDefault();window.location.href='<?php echo $client->createAuthUrl(); $_SESSION['Login_Method'] = 'Google';?>'; return false;">
+          <button class="btn google" id="google_login" onclick="event.preventDefault(); window.location.href = '<?php $_SESSION['Login_Method'] = 'Google'; echo $client->createAuthUrl(); ?>'; return false;">
             <svg
               xml:space="preserve"
               style="enable-background: new 0 0 512 512"
