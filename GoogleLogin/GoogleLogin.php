@@ -1,8 +1,14 @@
 <?php
 
 function GoogleLoginEvent(){
-  require_once 'API/config.php';
-  require_once 'API/GetInfo.php';
+  $autoloadPath = 'API/config.php';
+  if (file_exists($autoloadPath)) {
+      require_once $autoloadPath;
+      require_once 'API/GetInfo.php';
+  } else {
+      require_once '../API/config.php';
+      require_once '../API/GetInfo.php';
+  }
   // authenticate code from Google OAuth Flow
   if (isset($_GET['code'])) {
     $token = $client->fetchAccessTokenWithAuthCode($_GET['code']);
@@ -29,7 +35,7 @@ function GoogleLoginEvent(){
       $token = $userinfo['token'];
     } else {
       // user is not exists
-      $sql = "INSERT INTO users (email, gender, full_name, verifiedEmail, token) VALUES ('{$userinfo['email']}', '{$userinfo['gender']}', '{$userinfo['full_name']}','{$userinfo['verifiedEmail']}', '{$userinfo['token']}')";
+      $sql = "INSERT INTO users (email, full_name, verifiedEmail, token) VALUES ('{$userinfo['email']}', '{$userinfo['full_name']}','{$userinfo['verifiedEmail']}', '{$userinfo['token']}')";
       $result = mysqli_query($conn, $sql);
       if ($result) {
         $token = $userinfo['token'];

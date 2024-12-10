@@ -49,7 +49,7 @@ if ($method === 'POST') { // create account
                             mysqli_stmt_execute($stmt);
 
                             header("Content-Type: application/json");
-                            $msg = ['message' => "Success.", 'redirect' => "game.php"];
+                            $msg = ['message' => "Success.", 'redirect' => "game2/index.php"]; //
                             echo json_encode($msg);
                             $_SESSION['Login_Method'] = 'General';
                             $_SESSION['Login_Name'] = $_POST['email'];
@@ -106,7 +106,7 @@ if ($method === 'POST') { // create account
                         $_SESSION['Login_Name'] = $email;
 
                         header("Content-Type: application/json");
-                        $msg = ['message' => "Success.", 'redirect' => "game.php"];
+                        $msg = ['message' => "Success.", 'redirect' => "game2/index.php"];
                         echo json_encode($msg);
                         
                         
