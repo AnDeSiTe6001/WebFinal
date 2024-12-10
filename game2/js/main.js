@@ -16,6 +16,7 @@ import { startGame, pauseGame, resumeGame, gameOver } from './GameFlow.js'; // �
 
 import * as THREE from 'https://unpkg.com/three@0.126.1/build/three.module.js';
 import { PointerLockControls } from 'https://unpkg.com/three@0.126.1/examples/jsm/controls/PointerLockControls.js';
+import { OrbitControls } from 'https://unpkg.com/three@0.126.1/examples/jsm/controls/OrbitControls.js';
 
 // 初始化場景和相機
 const scene = createBackground();
@@ -24,19 +25,27 @@ const camera = createCamera();
 // 初始化渲染器
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setClearColor(0x202020, 1);
+// renderer.setClearColor(0x202020, 1);
+renderer.shadowMap.enabled = true; // 啟用陰影
 document.body.appendChild(renderer.domElement);
 
 // 初始化 PointerLockControls
-const controls = new PointerLockControls(camera, document.body);
+// const controls = new PointerLockControls(camera, document.body);
+
+// 初始化 OrbitControls
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; // 啟用阻尼效果
+controls.dampingFactor = 0.05;
+controls.target.set(0, 3, 0); // 設置 OrbitControls 的目標為模型門口位置
+controls.update();
 
 // 初始相機方向
-camera.position.set(0, 1.6, 0); 
-camera.lookAt(new THREE.Vector3(1, 1.6, 0));
+// camera.position.set(0, 1.6, 0); 
+// camera.lookAt(new THREE.Vector3(1, 1.6, 0));
 
 // 添加牆壁與窗口
-const wall = createWallWithWindow();
-scene.add(wall);
+// const wall = createWallWithWindow();
+// scene.add(wall);
 
 // 狀態參數
 let monsters = [];
