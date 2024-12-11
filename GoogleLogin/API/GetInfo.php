@@ -1,7 +1,14 @@
 <?php
 
 function GetInfo($email){
-    require_once 'API/config.php';
+    // Dynamically determine the relative path for autoload
+    $autoloadPath = 'API/config.php';
+    // Check if the file exists in the determined path
+    if (file_exists($autoloadPath)) {
+        require_once $autoloadPath;
+    } else {
+        require_once '../API/config.php';
+    }
     //session_start();
     $conn = Connect2Database();
     //$name = $_SESSION['Login_Name'];
