@@ -64,7 +64,7 @@ function setupRenderer() {
 
 function setupScene() {
     scene = new THREE.Scene();
-    setupCameraPositionMarker();
+    // setupCameraPositionMarker();
     addRandomObjects();
 }
 
@@ -91,11 +91,14 @@ function addRandomObjects() {
 }
 
 function setupCameras() {
-    orbitalCamera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 5000);
-    orbitalCamera.position.set(0, 75, 160);
+    orbitalCamera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 50000);
+    orbitalCamera.position.set(0, 30, 160);
+    // orbitalCamera.rotation.set(0, 0, 0);
+    console.log(orbitalCamera.rotation);
+    // orbitalCamera.setRotationFromEuler(new THREE.Euler(-0.1, 0, 0));
 
     gameCamera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 5000);
-    gameCamera.position.set(0, 75, 160);
+    gameCamera.position.set(0, 30, 160);
     scene.add(gameCamera);
 
     frustumHelper = new THREE.CameraHelper(gameCamera);
@@ -133,6 +136,7 @@ function setupControls() {
     orbitControls.dampingFactor = 0.25;
     orbitControls.screenSpacePanning = false;
     orbitControls.maxPolarAngle = Math.PI / 2;
+    console.log(orbitalCamera.rotation);
 
     // transformControls.addEventListener('mouseDown', () => orbitControls.enabled = false);
     // transformControls.addEventListener('mouseUp', () => orbitControls.enabled = true);
@@ -280,8 +284,10 @@ function setCameraNearPlane() {
     const planeGeo = new THREE.PlaneGeometry(width, height);
     const planeMat = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
     nearPlane = new THREE.Mesh(planeGeo, planeMat);
-    nearPlane.rotation.set(orbitalCamera.rotation.x, orbitalCamera.rotation.y, orbitalCamera.rotation.z);
-    nearPlane.position.set(orbitalCamera.position.x, orbitalCamera.position.y, orbitalCamera.position.z - orbitalCamera.near - 1);
+    console.log(orbitalCamera.rotation);
+    // nearPlane.rotation.set(orbitalCamera.rotation.x, orbitalCamera.rotation.y, orbitalCamera.rotation.z);
+    nearPlane.rotation.set(0, 0, 0);
+    nearPlane.position.set(orbitalCamera.position.x, orbitalCamera.position.y, orbitalCamera.position.z - orbitalCamera.near);
     scene.add(nearPlane);
 }
 
@@ -319,7 +325,7 @@ function animate() {
     frustumHelper.update();
     orbitControls.update();
     setCameraToHeadPosition();
-    updateCameraPositionMarker();
+    // updateCameraPositionMarker();
     renderer.xr.enabled = currentXrEnabled;
     renderer.shadowMap.autoUpdate = currentShadowAutoUpdate;
     renderer.setRenderTarget(currentRenderTarget);

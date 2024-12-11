@@ -1,6 +1,6 @@
 // js/Background.js
-import * as THREE from 'https://unpkg.com/three@0.126.1/build/three.module.js';
-import { GLTFLoader } from 'https://unpkg.com/three@0.126.1/examples/jsm/loaders/GLTFLoader.js';
+import * as THREE from 'https://unpkg.com/three@0.150.1/build/three.module.js';
+import { GLTFLoader } from 'https://unpkg.com/three@0.150.1/examples/jsm/loaders/GLTFLoader.js';
 
 export function createBackground() {
     const scene = new THREE.Scene();
@@ -22,8 +22,8 @@ export function createBackground() {
     scene.add(ground);
 
     // 添加坐標軸輔助工具
-    const axesHelper = new THREE.AxesHelper(10); // 長度為10的坐標軸
-    scene.add(axesHelper);
+    // const axesHelper = new THREE.AxesHelper(10); // 長度為10的坐標軸
+    // scene.add(axesHelper);
 
     // 添加格線輔助工具
     const gridSize = 100;
@@ -94,7 +94,7 @@ export function createCamera() {
         0.1, 
         1000
     );
-    camera.position.set(0, 3, 0); // 設置相機位置在門口前方
+    camera.position.set(0, 3, 15); // 設置相機位置在門口前方
     camera.lookAt(new THREE.Vector3(0, 0, 0)); // 確保相機朝向模型門口
     return camera;
 }

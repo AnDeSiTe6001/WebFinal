@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>three.js webgl - portal</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link type="text/css" rel="stylesheet" href="parallax.css">
+    <style>
+        body {
+            color: #444;
+        }
+        a {
+            color: #08f;
+        }
+        #webcam {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 320px;
+            height: 240px;
+            /* border: 2px solid #444; */
+        }
+        .switch {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+        }
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .slider.round {
+            border-radius: 34px;
+        }
+        .slider.round:before {
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    <div id="info"><a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - portal</div>
+    <label class="switch">
+        <input type="checkbox" id="toggleDebug" checked>
+        <span class="slider round"></span>
+    </label>
+    <span style="position: absolute; top: 18px; right: 80px;">Debug Mode</span>
+    <div style="position: absolute; top: 50px; right: 10px;">
+        <input type="range" id="ParallaxCoefSlider" min="0.001" max="0.05" step="0.001" value="0.01">
+        <span>Parallax Coefficient</span>
+    </div>
+    <div style="position: absolute; top: 90px; right: 10px;">
+        <input type="range" id="LerpCoefSlider" min="0.1" max="1.0" step="0.1" value="0.3">
+        <span>Lerp Coefficient</span>
+    </div>
+    <div style="position: absolute; top: 130px; right: 10px;">
+        <button id="switchToGameCamera">Game Camera</button>
+        <button id="switchToOrbitalCamera">Orbital Camera</button>
+    </div>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.150.1/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.150.1/examples/jsm/"
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet"></script>
+    <script type="module" src="parallax.js"></script>
+</body>
+</html>
