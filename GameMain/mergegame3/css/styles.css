@@ -1,0 +1,285 @@
+/* 全局樣式 */
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: #fff;
+}
+
+/* 難度選擇容器樣式 */
+.difficulty-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* 按鈕樣式 */
+button {
+    background: linear-gradient(45deg, #6b8cff, #4663ff);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-size: 12px;
+    font-family: 'Press Start 2P', cursive; /* 像素風格字體 */
+    text-transform: uppercase; /* 大寫字母 */
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+button:hover {
+    background: linear-gradient(45deg, #4663ff, #6b8cff);
+    transform: translateY(-2px);
+}
+
+button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* 難度按鈕樣式 */
+.difficulty-button {
+    font-family: 'Press Start 2P', cursive; /* 遊戲像素風字體 */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-size: 12px; /* 遊戲像素字體通常需要小一點 */
+    cursor: pointer;
+    text-transform: uppercase; /* 大寫字母 */
+    transition: background 0.3s, transform 0.2s, color 0.2s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    letter-spacing: 1px; /* 增加字母間距 */
+}
+
+.difficulty-button:hover {
+    color: #FFD700; /* 懸浮時變為金色字體 */
+    transform: translateY(-2px);
+    background: linear-gradient(45deg, #333, #555); /* 懸浮時略微暗化背景 */
+}
+
+/* 難度按鈕不同顏色 */
+.difficulty-button.easy {
+    background: linear-gradient(45deg, #4CAF50, #81C784); /* 綠色系 */
+}
+.difficulty-button.easy:hover {
+    background: linear-gradient(45deg, #81C784, #4CAF50);
+    transform: translateY(-2px);
+}
+
+.difficulty-button.normal {
+    background: linear-gradient(45deg, #2196F3, #64B5F6); /* 藍色系 */
+}
+.difficulty-button.normal:hover {
+    background: linear-gradient(45deg, #64B5F6, #2196F3);
+    transform: translateY(-2px);
+}
+
+.difficulty-button.hard {
+    background: linear-gradient(45deg, #F44336, #E57373); /* 紅色系 */
+}
+.difficulty-button.hard:hover {
+    background: linear-gradient(45deg, #E57373, #F44336);
+    transform: translateY(-2px);
+}
+
+/* 再來一次按鈕樣式 */
+.play-again-button {
+    background: linear-gradient(45deg, #2196F3, #64B5F6); /* 藍色系 */
+    font-size: 12px;
+}
+.play-again-button:hover {
+    background: linear-gradient(45deg, #64B5F6, #2196F3);
+    transform: translateY(-2px);
+}
+
+/* 重新選擇難度按鈕樣式 */
+.choose-difficulty-button {
+    background: linear-gradient(45deg, #F44336, #E57373); /* 紅色系 */
+    font-size: 12px;
+}
+.choose-difficulty-button:hover {
+    background: linear-gradient(45deg, #E57373, #F44336);
+    transform: translateY(-2px);
+}
+
+/* 繼續遊戲按鈕 */
+.resume-button {
+    background: linear-gradient(45deg, #4CAF50, #81C784); /* 綠色系 (與簡單模式一致) */
+}
+.resume-button:hover {
+    background: linear-gradient(45deg, #81C784, #4CAF50);
+    transform: translateY(-2px);
+}   
+
+/* Game Over 標題樣式 */
+.game-over-title {
+    font-family: 'Press Start 2P', cursive; /* 像素風格字體 */
+    font-size: 48px; /* 顯眼的大字 */
+    color: #FF0000; /* 鮮紅色 */
+    text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.7), 0 0 10px #FF4500; /* 強烈陰影和光暈效果 */
+    text-align: center; /* 居中 */
+    margin: 20px 0; /* 與其他內容的間距 */
+    letter-spacing: 2px; /* 增加字母間距 */
+    text-transform: uppercase; /* 全部大寫 */
+}
+
+/* 覆蓋層樣式 */
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    padding: 20px;
+    box-sizing: border-box;
+    z-index: 10;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+/* 隱藏覆蓋層 */
+.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* 顯示覆蓋層 */
+.overlay:not(.hidden) {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* 標題樣式 - 遊戲像素風格 */
+.overlay h1, .overlay h2 {
+    /* font-family: 'VT323', monospace; */
+    font-family: 'Press Start 2P', cursive; /* 遊戲像素風字體 */
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); /* 添加陰影 */
+    color: #FFFFFF; /* 白色文字 */
+    letter-spacing: 1px; /* 微調字母間距 */
+    text-transform: uppercase; /* 全部大寫 */
+    font-size: 24px; /* 控制像素感大小 */
+    line-height: 1.5; /* 行距調整，讓文字更易讀 */
+}
+
+/* 分數顯示樣式 */
+#score-display {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 18px !important; /* 強制應用該樣式 */
+    font-family: 'Press Start 2P', cursive;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+/* 暫停按鈕樣式 */
+#pause-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(255, 255, 255, 0.8);
+    color: #333;
+    font-size: 24px;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    z-index: 10;
+}
+
+#pause-button:hover {
+    background: rgba(255, 255, 255, 1);
+    transform: scale(1.05);
+}
+
+#pause-button:active {
+    transform: scale(1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* 排行榜樣式 */
+#leaderboard-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+    width: 100%;
+    max-width: 400px;
+}
+
+#leaderboard-list li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 18px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    transition: background 0.3s;
+}
+
+#leaderboard-list li:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+#leaderboard-list li .prefix {
+    width: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#leaderboard-list li .score-text {
+    margin-left: 10px;
+}
+
+/* 響應式設計 */
+@media (max-width: 600px) {
+    #score-display {
+        font-size: 16px;
+        padding: 8px 16px;
+    }
+
+    button {
+        font-size: 14px;
+        padding: 10px 20px;
+    }
+
+    #pause-button {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+}
+
+#sniper-scope {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 150px; /* 狙擊鏡大小 */
+    height: 150px;
+    border: 5px solid rgba(255, 255, 255, 0.8); /* 白色邊框 */
+    border-radius: 50%; /* 圓形 */
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); /* 外圈陰影 */
+    background: rgba(0, 0, 0, 0.2); /* 半透明黑色背景 */
+    pointer-events: none; /* 避免遮擋滑鼠點擊 */
+    z-index: 9999; /* 保持在最上層 */
+    display: none; /* 預設隱藏 */
+}
