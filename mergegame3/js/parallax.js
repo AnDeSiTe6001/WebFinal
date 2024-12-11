@@ -15,6 +15,7 @@ let kalmanFilterX;
 let kalmanFilterY;
 let kalmanR = 0.06; // Initial R value
 let kalmanQ = 0.3;  // Initial Q value
+let flipHorizontal = false; // New variable for flipHorizontal
 
 
 export async function parllaxInit(_scene) {
@@ -38,7 +39,7 @@ async function loadPosenet() {
 async function getHeadPosition() {
     try {
         video.play();
-        const pose = await net.estimateSinglePose(video, { flipHorizontal: false });
+        const pose = await net.estimateSinglePose(video, { flipHorizontal });
         const keypoint = pose.keypoints.find(k => k.part === 'nose');
         if (keypoint && keypoint.score > 0.5) {
             return keypoint.position;
@@ -115,6 +116,7 @@ function addEventListeners() {
     // document.getElementById('smoothFactorSlider').addEventListener('input', updateSmoothFactor); // New event listener
     document.getElementById('KalmanRSlider').addEventListener('input', updateKalmanR);
     document.getElementById('KalmanQSlider').addEventListener('input', updateKalmanQ);
+    document.getElementById('flipHorizontalSwitch').addEventListener('change', updateFlipHorizontal); // New event listener
 }
 
 function updateParallaxCoef(event) {
@@ -135,6 +137,10 @@ function updateKalmanQ(event) {
     kalmanQ = parseFloat(event.target.value);
     kalmanFilterX.Q = kalmanQ;
     kalmanFilterY.Q = kalmanQ;
+}
+
+function updateFlipHorizontal(event) {
+    flipHorizontal = event.target.checked;
 }
 
 function renderGame(thisPlane) {
