@@ -8,7 +8,7 @@ let bottomLeftCorner, bottomRightCorner, topLeftCorner;
 let frustumHelper, isGameCameraActive = false, net, video;
 let nearPlane;
 let debugMode = false;
-let parallaxCoef = 0.002; // Initial coefficient value
+let parallaxCoef = 0.004; // Initial coefficient value
 // let smoothFactor = 0.3; // smoothFactor
 
 let kalmanFilterX;
