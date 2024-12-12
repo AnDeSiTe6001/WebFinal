@@ -24,7 +24,7 @@ import { parllaxInit,
     preParallaxAnimate,
     postParallaxAnimate
 } from './parallax.js';
-// 初始化場景和相機
+// 初始化場景���相機
 const scene = createBackground();
 // const camera = createCamera();
 setupParallaxScene(scene);
@@ -39,13 +39,6 @@ const renderer = setupRenderer();
 // renderer.shadowMap.enabled = true;
 // document.body.appendChild(renderer.domElement);
 const sniperScope = document.getElementById('sniper-scope');
-
-// // 初始化 OrbitControls
-// const controls = new OrbitControls(camera, renderer.domElement);
-// controls.enableDamping = true; 
-// controls.dampingFactor = 0.05;
-// controls.target.set(0, 3, 0);
-// controls.update();
 
 // 狀態參數
 let monsters = [];
@@ -189,7 +182,6 @@ function shootLaser(startPosition, targetPosition) {
 
     // 創建圓柱體幾何作為雷射線
     const laserGeometry = new THREE.CylinderGeometry(0.05, 0.05, distance, 8);
-    // const laserMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, emissive: 0xffff00 }); // 明亮黃色
     // 增強材質屬性
     // 定義雷射線材質為紅色，增加發光效果
     const laserMaterial = new THREE.MeshBasicMaterial({ 
@@ -222,6 +214,16 @@ function shootLaser(startPosition, targetPosition) {
     }, 50); // 雷射線顯示時間（毫秒）
 }
 
+function showDamageEffect() {
+    const overlay = document.getElementById('damage-overlay');
+    overlay.style.opacity = 1;
+
+    // 延遲一段時間後淡出
+    setTimeout(() => {
+        overlay.style.opacity = 0;
+    }, 100); // 持續 300 毫秒
+}
+
 function animate() {
     if (isPausedRef.value || isGameOverRef.value || !isStartedRef.value) return;
 
@@ -248,6 +250,7 @@ function animate() {
             if (elapsed - lastAttackTime > attackCooldown) {
                 playerHealthRef.value -= 10;
                 updateHealthDisplay();
+                showDamageEffect(); // 顯示紅色遮罩效果
                 lastAttackTime = elapsed;
                 if (playerHealthRef.value <= 0) {
                     gameOver({
@@ -289,6 +292,9 @@ resumeButton.addEventListener('click', () => {
 });
 
 playAgainButton.addEventListener('click', () => {
+    // Reset lastAttackTime
+    lastAttackTime = 0;
+    
     gameOverOverlay.style.display = 'none';
     playerHealthRef.value = 100; // Reset player health
     updateHealthDisplay(); // Update the health display
@@ -365,71 +371,19 @@ window.addEventListener('click', (event) => {
     // 發射雷射線
     shootLaser(startPosition, targetPosition);    
 
-    const validMeshes = monsters
-        .map(monster => monster.mesh)
-        .filter(mesh => mesh !== null && mesh !== undefined);
 
-    // 進行 Raycaster 的初步相交檢測
-    // const intersects = raycaster.intersectObjects(validMeshes, true);
-    // console.log('Intersects:', intersects);
-
-    // 如果沒有精確檢測到，進行範圍擴展檢測
-    if (intersects.length === 0) {
-        console.log('No direct intersects, checking extended range...');
-
-        const extendedRange = 2; // 擴大範圍，單位為模型的邊界框尺寸
-        const hitMonsterIndex = monsters.findIndex(monster => {
-            if (!monster.mesh) return false;
-            
-            const box = new THREE.Box3().setFromObject(monster.mesh);
-            const center = new THREE.Vector3();
-            box.getCenter(center);
-            
-            // 計算滑鼠 Ray 與物體中心的距離
-            const distance = raycaster.ray.distanceToPoint(center);
-            console.log('Distance to monster:', distance);
-            
-            return distance <= extendedRange; // 判定是否在擴展範圍內
-        });
-
-        if (hitMonsterIndex !== -1) {
-            const hitMonster = monsters[hitMonsterIndex];
-            hitMonster.remove(scene);
-            monsters.splice(hitMonsterIndex, 1);
+    const hitTolerance = 3; // Added hit tolerance
+    monsters.forEach(monster => {
+        const distance = raycaster.ray.distanceToPoint(monster.mesh.position);
+        if (distance <= hitTolerance) {
+            // monster.hit(); // Trigger hit animation
+            monster.remove(scene); // Remove monster from scene
+            monsters = monsters.filter(m => m !== monster); // Remove monster from array
             const basePoints = 10;
-            scoreRef.value = updateScoreFunc(scoreRef.value, scoreMultiplierRef.value, scoreDisplay, basePoints);            
-            console.log('Monster killed in extended range:', hitMonster);
-            return;
+            scoreRef.value = updateScoreFunc(scoreRef.value, scoreMultiplierRef.value, scoreDisplay, basePoints);
+            console.log('Monster hit:', monster);
         }
-    }
-
-    // 精確檢測到的情況處理
-    if (intersects.length > 0) {
-        const intersectedObject = intersects[0].object;
-
-        // 不使用 contains，改用 traverse
-        const hitMonsterIndex = monsters.findIndex(monster => {
-            if (!monster.mesh) return false;
-            let found = false;
-            monster.mesh.traverse((child) => {
-                if (child === intersectedObject) {
-                    found = true;
-                }
-            });
-            return found;
-        });
-
-        if (hitMonsterIndex !== -1) {
-            const hitMonster = monsters[hitMonsterIndex];
-            hitMonster.remove(scene);
-            monsters.splice(hitMonsterIndex, 1);
-            const basePoints = 10;
-            scoreRef.value = updateScoreFunc(scoreRef.value, scoreMultiplierRef.value, scoreDisplay, basePoints);            
-            console.log('Monster killed:', hitMonster);
-        }
-    } else {
-        console.log('No intersects detected.');
-    }
+    });
 });
 
 

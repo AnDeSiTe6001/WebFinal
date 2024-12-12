@@ -283,3 +283,16 @@ button:active {
     z-index: 9999; /* 保持在最上層 */
     display: none; /* 預設隱藏 */
 }
+
+#damage-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 0, 0, 0.5); /* 半透明紅色 */
+    opacity: 0; /* 初始透明 */
+    pointer-events: none; /* 確保不影響遊戲互動 */
+    transition: opacity 0.3s ease; /* 漸入漸出的效果 */
+    z-index: 9999; /* 保證在最前面 */
+}

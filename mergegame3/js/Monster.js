@@ -12,8 +12,9 @@ export class Monster {
         this.mesh = null;
         this.onLoadCallback = onLoadCallback;
         this.playerPosition = playerPosition.clone();
-        this.collisionDistance = 13; // Use the same stoppingDistance
+        this.collisionDistance = 12; // Use the same stoppingDistance
         this.stoppingDistance = 10; // Adjust as needed
+        this.isHit = false; // Add hit state
 
         // Calculate spawn position relative to the player's position
         const spawnDistance = 40;
@@ -43,18 +44,9 @@ export class Monster {
                 this.mesh = gltf.scene;
                 console.log('Loaded Monster Mesh:', this.mesh);
 
-                // 若模型太大，微調縮放比例
+                // 若模型太大，微調縮��比例
                 const scale = 0.015 + Math.random() * 0.015; // 隨機大小範圍為 0.015 至 0.025
                 this.mesh.scale.set(scale, scale, scale);
-
-                // 設定 userData.monster，保留原材質不改動
-                this.mesh.traverse((child) => {
-                    if (child.isMesh) {
-                        child.frustumCulled = false;
-                        child.material.side = THREE.DoubleSide;
-                        child.userData.monster = this;
-                    }
-                });
 
                 // Set the position of the mesh
                 this.mesh.position.copy(this.position);
@@ -66,6 +58,26 @@ export class Monster {
                     this.playerPosition.z
                 ));
 
+                // Add bounding box helper for visualization
+                // const boxHelper = new THREE.BoxHelper(this.mesh, 0x00ff00);
+                // this.scene.add(boxHelper);
+                // this.boxHelper = boxHelper; // Store reference if needed
+
+
+                const boundingBox = new THREE.Box3().setFromObject(this.mesh);
+                const size = new THREE.Vector3();
+                boundingBox.getSize(size);
+
+                // Get the center of the bounding box
+                const center = new THREE.Vector3();
+                boundingBox.getCenter(center);
+
+                // Adjust mesh position so the origin is at the base
+                this.mesh.position.y += size.y / 2;
+
+                // Update the bounding box helper
+                // this.boxHelper.update();
+
                 // 如果有動畫則播放
                 if (gltf.animations && gltf.animations.length > 0) {
                     this.mixer = new AnimationMixer(this.mesh);
@@ -76,7 +88,7 @@ export class Monster {
                     // Create subclips for walking and attack animations
                     const walkClip = AnimationUtils.subclip(fullClip, 'Walk', 875, 943); // Frames for walking
                     const attackClip = AnimationUtils.subclip(fullClip, 'Attack', 510, 590); // Frames for attacking
-
+                    const hitClip = AnimationUtils.subclip(fullClip, 'Hit', 384, 429); // Frames for being hit
                     // Walking animation
                     this.walkAction = this.mixer.clipAction(walkClip);
                     this.walkAction.setLoop(THREE.LoopRepeat);
@@ -87,6 +99,11 @@ export class Monster {
                     this.attackAction = this.mixer.clipAction(attackClip);
                     this.attackAction.setLoop(THREE.LoopRepeat);
                     this.attackAction.clampWhenFinished = true;
+
+                    // Hit animation
+                    this.hitAction = this.mixer.clipAction(hitClip);
+                    this.hitAction.setLoop(THREE.LoopOnce);
+                    this.hitAction.clampWhenFinished = true;
 
                     // Add mixer to scene's userData.mixers for updating
                     this.scene.userData.mixers = this.scene.userData.mixers || [];
@@ -105,6 +122,20 @@ export class Monster {
         );
     }
 
+    // Add hit method
+    hit() {
+        if (this.hitAction && !this.isHit) {
+            this.isHit = true;
+            this.walkAction.stop();
+            this.hitAction.reset().play();
+            this.hitAction.clampWhenFinished = true;
+            this.hitAction.onFinished = () => {
+                this.isHit = false;
+                this.walkAction.reset().play();
+            };
+        }
+    }
+
     update(delta, playerPosition) {
         if (this.mesh) {
             // Update direction towards the player's current position
@@ -113,7 +144,14 @@ export class Monster {
             // Calculate distance to player
             const distanceToPlayer = this.mesh.position.distanceTo(playerPosition);
 
-            
+            if (this.isHit) {
+                // If hit, update mixer and skip movement
+                if (this.mixer) {
+                    this.mixer.update(delta);
+                }
+                return; // Skip the rest of the update
+            }
+
             if (distanceToPlayer > this.stoppingDistance) {
                 // Move towards the player
                 this.mesh.position.add(this.direction.clone().multiplyScalar(this.speed * delta));

@@ -38,7 +38,7 @@ export function createBackground() {
     // 載入3D監獄模型
     const loader = new GLTFLoader();
     loader.load(
-        'assets/models/prison/prison_small.glb', // 模型路徑
+        'assets/models/prison/Barren_Soil.glb', // 模型路徑
         (gltf) => {
             const model = gltf.scene;
             model.scale.set(2, 2, 2); // 調整模型大小
