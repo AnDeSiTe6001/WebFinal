@@ -1,32 +1,44 @@
 // js/Monster.js
 import * as THREE from 'https://unpkg.com/three@0.150.1/build/three.module.js';
 import { GLTFLoader } from 'https://unpkg.com/three@0.150.1/examples/jsm/loaders/GLTFLoader.js';
+import { AnimationMixer, AnimationUtils } from 'three';
 
 export class Monster {
-    constructor(scene, speed = 5, playerPosition = new THREE.Vector3(0,0,0), playerDirection = new THREE.Vector3(0,0,-1), onLoadCallback = () => {}) {
+    constructor(scene, speed = 5, playerPosition = new THREE.Vector3(0, 5, 20), onLoadCallback = () => {}) {
         this.scene = scene;
         this.speed = speed;
         this.loader = new GLTFLoader();
         this.mixer = null;
         this.mesh = null;
         this.onLoadCallback = onLoadCallback;
+        this.playerPosition = playerPosition.clone();
+        this.collisionDistance = 13; // Use the same stoppingDistance
+        this.stoppingDistance = 10; // Adjust as needed
 
-        const distance = 40; 
-        const angle = (Math.random() * (Math.PI / 2)) - (Math.PI / 4); // -90° 到 +90°
-        const x = Math.sin(angle) * distance;
-        const z = -Math.cos(angle) * distance;
-        this.position = new THREE.Vector3(x, 0, z);
+        // Calculate spawn position relative to the player's position
+        const spawnDistance = 40;
+        const spawnAngle = (Math.random() * (Math.PI / 2)) - (Math.PI / 4); // -45° to +45°
+        const xOffset = Math.sin(spawnAngle) * spawnDistance;
+        const zOffset = -Math.cos(spawnAngle) * spawnDistance;
+
+
+        this.position = new THREE.Vector3(
+            playerPosition.x + xOffset,
+            0,
+            playerPosition.z + zOffset
+        );
+
+        // Calculate direction towards the player
         this.direction = new THREE.Vector3()
             .subVectors(playerPosition, this.position)
-            .normalize(); // playerPosition 需同步為相機位置
-
+            .normalize();
 
         this.loadModel();
     }
 
     loadModel() {
         this.loader.load(
-            'assets/models/monster/zombie.glb', 
+            'assets/models/monster/zombie_snapper.glb', 
             (gltf) => {
                 this.mesh = gltf.scene;
                 console.log('Loaded Monster Mesh:', this.mesh);
@@ -43,68 +55,43 @@ export class Monster {
                         child.userData.monster = this;
                     }
                 });
-                
 
-                // 將模型中心移至(0,0,0)
-                this.mesh.updateMatrixWorld(true);
-                const box = new THREE.Box3().setFromObject(this.mesh);
-                const size = new THREE.Vector3();
-                const center = new THREE.Vector3();
-                box.getSize(size);
-                box.getCenter(center);
+                // Set the position of the mesh
+                this.mesh.position.copy(this.position);
 
-                this.mesh.position.sub(center);
-                this.mesh.position.y = size.y / 2; // 貼地高度
+                // Rotate the monster to face the player
+                this.mesh.lookAt(new THREE.Vector3(
+                    this.playerPosition.x,
+                    this.mesh.position.y,
+                    this.playerPosition.z
+                ));
 
-                // 底部貼地：以 box.min.y 為基準
-                // 若發現仍然漂浮，可直接手動微調 offset 
-                const minY = box.min.y;
-                this.mesh.position.y -= minY; 
-                // 如果仍嫌太高或太低可加減
-                this.mesh.position.y -= 7; // 根據需要微調
-                this.mesh.position.add(this.position);
-
-                // 如果模型是「趴著」，可嘗試旋轉修正
-                // this.mesh.rotation.x = -Math.PI / 2; // 視需要調整模型方向
-                
                 // 如果有動畫則播放
                 if (gltf.animations && gltf.animations.length > 0) {
-                    this.mixer = new THREE.AnimationMixer(this.mesh);
-                    // 列動畫名稱
+                    this.mixer = new AnimationMixer(this.mesh);
                     console.log('Available animations:', gltf.animations.map(clip => clip.name));
 
-                    // 隨機播放44秒動畫片段
-                    const clip = gltf.animations[0]; // 單一條44秒的動畫
-                    const action = this.mixer.clipAction(clip);
-                    
-                    // 隨機選擇起始時間(0 ~ clip.duration)
-                    action.time = Math.random() * clip.duration;
-                    action.setLoop(THREE.LoopRepeat);
-                    action.play();
+                    const fullClip = gltf.animations[0];
 
-                    // 將 mixer 加入場景，之後在 main.js update 時會更新
+                    // Create subclips for walking and attack animations
+                    const walkClip = AnimationUtils.subclip(fullClip, 'Walk', 875, 943); // Frames for walking
+                    const attackClip = AnimationUtils.subclip(fullClip, 'Attack', 510, 590); // Frames for attacking
+
+                    // Walking animation
+                    this.walkAction = this.mixer.clipAction(walkClip);
+                    this.walkAction.setLoop(THREE.LoopRepeat);
+                    this.walkAction.timeScale = 0.2;
+                    this.walkAction.play();
+
+                    // Attack animation
+                    this.attackAction = this.mixer.clipAction(attackClip);
+                    this.attackAction.setLoop(THREE.LoopRepeat);
+                    this.attackAction.clampWhenFinished = true;
+
+                    // Add mixer to scene's userData.mixers for updating
                     this.scene.userData.mixers = this.scene.userData.mixers || [];
                     this.scene.userData.mixers.push(this.mixer);
                 }
-
-                // 處理動畫
-                // if (gltf.animations && gltf.animations.length > 0) {
-                //     this.mixer = new THREE.AnimationMixer(this.mesh);
-                    
-                //     gltf.animations.forEach((clip) => {
-                //         const action = this.mixer.clipAction(clip);
-                //         this.animations[clip.name] = action;
-                //     });
-
-                //     // 播放預設動畫，例如 'Walk'
-                //     const defaultAnimationName = 'Walk'; // 根據你的模型動畫名稱調整
-                //     if (this.animations[defaultAnimationName]) {
-                //         this.animations[defaultAnimationName].play();
-                //     }
-
-                //     this.scene.userData.mixers = this.scene.userData.mixers || [];
-                //     this.scene.userData.mixers.push(this.mixer);
-                // }
 
                 this.scene.add(this.mesh);
                 this.onLoadCallback();
@@ -118,9 +105,26 @@ export class Monster {
         );
     }
 
-    update(delta) {
+    update(delta, playerPosition) {
         if (this.mesh) {
-            this.mesh.position.add(this.direction.clone().multiplyScalar(this.speed * delta));
+            // Update direction towards the player's current position
+            this.direction.subVectors(playerPosition, this.mesh.position).normalize();
+
+            // Calculate distance to player
+            const distanceToPlayer = this.mesh.position.distanceTo(playerPosition);
+
+            
+            if (distanceToPlayer > this.stoppingDistance) {
+                // Move towards the player
+                this.mesh.position.add(this.direction.clone().multiplyScalar(this.speed * delta));
+            }
+
+            // Rotate the monster to face the player
+            this.mesh.lookAt(new THREE.Vector3(
+                playerPosition.x,
+                this.mesh.position.y,
+                playerPosition.z
+            ));
 
             const groundHeight = 0;
             const height = this.getModelHeight();
@@ -129,6 +133,19 @@ export class Monster {
             // 更新動畫
             if (this.mixer) {
                 this.mixer.update(delta);
+            }
+
+            // 切換動畫
+            if (this.checkCollision(playerPosition)) {
+                if (this.walkAction.isRunning()) {
+                    this.walkAction.stop();
+                    this.attackAction.reset().play();
+                }
+            } else {
+                if (this.attackAction.isRunning()) {
+                    this.attackAction.stop();
+                    this.walkAction.reset().play();
+                }
             }
         }
     }
@@ -145,7 +162,8 @@ export class Monster {
 
     checkCollision(playerPosition) {
         if (this.mesh) {
-            return this.mesh.position.distanceTo(playerPosition) < 2;
+            const distanceToPlayer = this.mesh.position.distanceTo(playerPosition);
+            return distanceToPlayer <= this.collisionDistance;
         }
         return false;
     }

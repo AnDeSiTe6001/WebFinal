@@ -14,7 +14,9 @@ export function startGame({
     updateScoreFunc,
     lastSpawnTimeRef,
     clock,
-    animate
+    animate,
+    playerHealthRef,
+    updateHealthDisplay
 }) {
     isStartedRef.value = true;
     isPausedRef.value = false;
@@ -32,6 +34,9 @@ export function startGame({
     scoreRef.value = 0;
     scoreRef.value = updateScoreFunc(scoreRef.value, scoreMultiplierRef.value, scoreDisplay, 0);
     lastSpawnTimeRef.value = 0;
+
+    playerHealthRef.value = 100; // Reset player health
+    updateHealthDisplay(); // Update the health display
 
     clock.start();
     animate();

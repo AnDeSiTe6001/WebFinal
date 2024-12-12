@@ -1,5 +1,5 @@
 // js/GameFlow.js
-import * as GameFunction from "../../API/GameFunction.js";
+
 export function startGame({
     isStartedRef,
     isPausedRef,
@@ -14,7 +14,9 @@ export function startGame({
     updateScoreFunc,
     lastSpawnTimeRef,
     clock,
-    animate
+    animate,
+    playerHealthRef,
+    updateHealthDisplay
 }) {
     isStartedRef.value = true;
     isPausedRef.value = false;
@@ -30,11 +32,11 @@ export function startGame({
 
     // 在更新分數前先重置分數
     scoreRef.value = 0;
-    let playerid = parseInt(
-        document.getElementById("PlayerID").textContent.replace("ID: ", "")
-    );
-    scoreRef.value = updateScoreFunc(scoreRef.value, scoreMultiplierRef.value, scoreDisplay, 0,playerid);
+    scoreRef.value = updateScoreFunc(scoreRef.value, scoreMultiplierRef.value, scoreDisplay, 0);
     lastSpawnTimeRef.value = 0;
+
+    playerHealthRef.value = 100; // Reset player health
+    updateHealthDisplay(); // Update the health display
 
     clock.start();
     animate();
@@ -64,8 +66,6 @@ export function gameOver({
     monsters,
     scene,
     finalScore,
-    Highest_Score,
-    playerid,
     scoreRef,
     updateHighScores,
     displayLeaderboard,
@@ -81,13 +81,7 @@ export function gameOver({
     monsters.length = 0;
 
     finalScore.innerText = `Your Score: ${Math.round(scoreRef.value)}`;
-    
-    /* update to database */
-    GameFunction.UpdateScore(Math.round(scoreRef.value), playerid);
 
-    //let highestscore = GameFunction.GetHighestScore(playerid);
-    //console.log(`(gameOver) Get Highest Score: ${highestscore}`);
-    //Highest_Score.innerText = `Your highest score: ${highestscore}`;
     const updatedHighScores = updateHighScores(scoreRef.value);
     displayLeaderboard(updatedHighScores);
 

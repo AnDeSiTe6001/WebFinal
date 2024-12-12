@@ -88,7 +88,7 @@ export function createStartScreen() {
 
     // 難度選擇容器
     const difficultyContainer = document.createElement('div');
-    // 使用 class 取代 inline style
+    // ��用 class 取代 inline style
     difficultyContainer.classList.add('difficulty-container');
 
     // 建立難度對應表
@@ -140,7 +140,7 @@ export function createGameOverScreen() {
     // 遊戲結束標題
     const title = document.createElement('h1');
     title.innerText = 'Game Over';
-    title.classList.add('game-over-title'); // 添加樣式類名
+    title.classList.add('game-over-title'); // 添���樣式類名
     overlay.appendChild(title);
 
     // 最終分數顯示
@@ -186,4 +186,20 @@ export function createGameOverScreen() {
     overlay.appendChild(buttonsContainer);
 
     return { overlay, playAgainButton, chooseDifficultyButton, finalScore, leaderboardList };
+}
+
+export function createHealthDisplay() {
+    const healthDiv = document.createElement('div');
+    healthDiv.id = 'health-display';
+    healthDiv.style.position = 'absolute';
+    healthDiv.style.top = '50px';
+    healthDiv.style.right = '10px';
+    healthDiv.style.fontSize = '24px';
+    healthDiv.style.color = 'white';
+    healthDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    healthDiv.style.padding = '10px 20px';
+    healthDiv.style.borderRadius = '10px';
+    healthDiv.innerText = 'Health: 100';
+    document.body.appendChild(healthDiv);
+    return healthDiv;
 }

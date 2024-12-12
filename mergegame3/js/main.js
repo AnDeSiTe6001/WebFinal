@@ -6,7 +6,8 @@ import {
     createPauseOverlay, 
     createScoreDisplay, 
     createStartScreen, 
-    createGameOverScreen 
+    createGameOverScreen,
+    createHealthDisplay
 } from './UI.js';
 import { createWallWithWindow } from './Wall.js';
 import { Leaderboard } from './Leaderboard.js';
@@ -58,6 +59,11 @@ let isStarted = false;
 let score = 0;
 let scoreMultiplier = 1;
 
+let playerHealth = 100;
+const playerHealthRef = { value: playerHealth };
+let lastAttackTime = 0;
+const attackCooldown = 1; // Cooldown time in seconds
+
 const isGameOverRef = { value: isGameOver };
 const isPausedRef = { value: isPaused };
 const isStartedRef = { value: isStarted };
@@ -76,6 +82,8 @@ const { overlay: pauseOverlay, resumeButton } = createPauseOverlay();
 const { overlay: gameOverOverlay, playAgainButton, chooseDifficultyButton, finalScore, leaderboardList } = createGameOverScreen();
 const scoreDisplay = createScoreDisplay();
 scoreDisplay.style.display = 'none';
+const healthDisplay = createHealthDisplay();
+healthDisplay.style.display = 'block';
 
 function updateHighScores(newScore) {
     return leaderboard.updateHighScores(newScore);
@@ -115,6 +123,10 @@ function displayLeaderboard(highScores) {
     console.log('Leaderboard updated with:', highScores);
 }
 
+function updateHealthDisplay() {
+    healthDisplay.innerText = `Health: ${playerHealthRef.value}`;
+}
+
 // 狙擊鏡
 // function showSniperScope() {
 //     sniperScope.style.display = 'block';
@@ -150,7 +162,9 @@ Object.values(buttons).forEach((button) => {
             updateScoreFunc,
             lastSpawnTimeRef,
             clock,
-            animate
+            animate,
+            playerHealthRef,
+            updateHealthDisplay
         });
 
         // 顯示狙擊鏡游標
@@ -161,14 +175,51 @@ Object.values(buttons).forEach((button) => {
 // 新增 spawnMonster 函數，使用 callback 確保 monster.mesh 已載入完成後才 push
 function spawnMonster() {
     const playerPosition = camera.position.clone();
-    const playerDirection = new THREE.Vector3();
-    camera.getWorldDirection(playerDirection);
 
-    const monster = new Monster(scene, monsterSpeed, playerPosition, playerDirection, () => {
-        // onLoadCallback，確保 monster.mesh 不為 null
+    const monster = new Monster(scene, monsterSpeed, playerPosition, () => {
         monsters.push(monster);
         console.log('Monster spawned:', monster);
     });
+}
+
+function shootLaser(startPosition, targetPosition) {
+    // 計算雷射線的方向和距離
+    const direction = new THREE.Vector3().subVectors(targetPosition, startPosition).normalize();
+    const distance = startPosition.distanceTo(targetPosition);
+
+    // 創建圓柱體幾何作為雷射線
+    const laserGeometry = new THREE.CylinderGeometry(0.05, 0.05, distance, 8);
+    // const laserMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, emissive: 0xffff00 }); // 明亮黃色
+    // 增強材質屬性
+    // 定義雷射線材質為紅色，增加發光效果
+    const laserMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0xff0000, // 明亮紅色
+        transparent: true,
+        opacity: 0.8,
+        blending: THREE.AdditiveBlending // 增加發光效果
+    });
+
+    const laserMesh = new THREE.Mesh(laserGeometry, laserMaterial);
+
+    // 設置圓柱體的位置和朝向
+    laserMesh.position.copy(startPosition).add(targetPosition).multiplyScalar(0.5); // 雷射線在中間
+    laserMesh.lookAt(targetPosition); // 指向目標點
+
+    // 修正旋轉，圓柱體默認沿Y軸，需要調整到射線方向
+    laserMesh.rotateX(Math.PI / 2);
+
+    // 提高渲染順序，確保雷射線在最前面
+    laserMesh.renderOrder = 1;
+
+    // 添加雷射線到場景
+    scene.add(laserMesh);
+    console.log('Laser added to scene:', laserMesh);
+
+    // 設置雷射線自動移除
+    setTimeout(() => {
+        scene.remove(laserMesh);
+        console.log('Laser removed from scene');
+    }, 50); // 雷射線顯示時間（毫秒）
 }
 
 function animate() {
@@ -178,13 +229,11 @@ function animate() {
 
     const delta = clock.getDelta();
     const elapsed = clock.getElapsedTime();
-
-    const playerPosition = camera.position.clone(); // 每幀獲取相機位置
+    const playerPosition = camera.position.clone(); // Get player's current position
 
     monsters.forEach((monster) => {
-        monster.update(delta, playerPosition); // 更新怪物位置與方向
+        monster.update(delta, playerPosition); // Pass player's position to update method
     });
-
 
     if (elapsed - lastSpawnTimeRef.value > spawnInterval) {
         spawnMonster(); // 使用 spawnMonster 代替直接 push
@@ -193,23 +242,30 @@ function animate() {
 
     for (let i = monsters.length - 1; i >= 0; i--) {
         const monster = monsters[i];
-        monster.update(delta);
+        monster.update(delta, playerPosition);
 
         if (monster.checkCollision(new THREE.Vector3(camera.position.x, 0, camera.position.z))) {
-            gameOver({
-                isGameOverRef,
-                isPausedRef,
-                clock,
-                monsters,
-                scene,
-                finalScore,
-                scoreRef,
-                updateHighScores,
-                displayLeaderboard,
-                gameOverOverlay,
-                pauseButton,
-                scoreDisplay
-            });
+            if (elapsed - lastAttackTime > attackCooldown) {
+                playerHealthRef.value -= 10;
+                updateHealthDisplay();
+                lastAttackTime = elapsed;
+                if (playerHealthRef.value <= 0) {
+                    gameOver({
+                        isGameOverRef,
+                        isPausedRef,
+                        clock,
+                        monsters,
+                        scene,
+                        finalScore,
+                        scoreRef,
+                        updateHighScores,
+                        displayLeaderboard,
+                        gameOverOverlay,
+                        pauseButton,
+                        scoreDisplay
+                    });
+                }
+            }
             break;
         }
     }
@@ -234,6 +290,8 @@ resumeButton.addEventListener('click', () => {
 
 playAgainButton.addEventListener('click', () => {
     gameOverOverlay.style.display = 'none';
+    playerHealthRef.value = 100; // Reset player health
+    updateHealthDisplay(); // Update the health display
     startGame({
         isStartedRef,
         isPausedRef,
@@ -248,7 +306,9 @@ playAgainButton.addEventListener('click', () => {
         updateScoreFunc,
         lastSpawnTimeRef,
         clock,
-        animate
+        animate,
+        playerHealthRef,
+        updateHealthDisplay
     }); 
     // 顯示狙擊鏡游標
     document.body.style.cursor = "url('images/crosshair32.png'), auto";
@@ -275,17 +335,43 @@ window.addEventListener('click', (event) => {
     // if (isPausedRef.value || controls.isLocked) return;
     if (isPausedRef.value) return;
 
+    if (event.target.closest('.difficulty-button')) { 
+        return;
+    }
+
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
+
+
+    const startPosition = new THREE.Vector3(0, 3, 15);
+
+    // 計算終點，檢測場景中的交點
+    const intersects = raycaster.intersectObjects(scene.children, true); // 檢測與場景物件的交點
+
+    let targetPosition;
+
+    if (intersects.length > 0) {
+        // 取第一個交點作為目標點
+        targetPosition = intersects[0].point;
+        console.log('Mouse click target:', targetPosition);
+    } else {
+        // 如果沒有交點，則設置一個遠處的目標點
+        const direction = raycaster.ray.direction.clone().normalize();
+        targetPosition = startPosition.clone().add(direction.multiplyScalar(1000)); // 遠處目標
+        console.log('Mouse click far target:', targetPosition);
+    }
+
+    // 發射雷射線
+    shootLaser(startPosition, targetPosition);    
 
     const validMeshes = monsters
         .map(monster => monster.mesh)
         .filter(mesh => mesh !== null && mesh !== undefined);
 
     // 進行 Raycaster 的初步相交檢測
-    const intersects = raycaster.intersectObjects(validMeshes, true);
-    console.log('Intersects:', intersects);
+    // const intersects = raycaster.intersectObjects(validMeshes, true);
+    // console.log('Intersects:', intersects);
 
     // 如果沒有精確檢測到，進行範圍擴展檢測
     if (intersects.length === 0) {
