@@ -90,6 +90,7 @@
 </head>
 <body>
     <div id="container"></div>
+    <div id="damage-overlay"></div>
     <!-- <div id="info"><a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - portal</div> -->
     <span style="position: absolute; top: 18px; right: 80px;">Debug Mode</span>
     <div style="position: absolute; top: 50px; right: 10px;">

@@ -222,6 +222,16 @@ function shootLaser(startPosition, targetPosition) {
     }, 50); // 雷射線顯示時間（毫秒）
 }
 
+function showDamageEffect() {
+    const overlay = document.getElementById('damage-overlay');
+    overlay.style.opacity = 1;
+
+    // 延遲一段時間後淡出
+    setTimeout(() => {
+        overlay.style.opacity = 0;
+    }, 100); // 持續 300 毫秒
+}
+
 function animate() {
     if (isPausedRef.value || isGameOverRef.value || !isStartedRef.value) return;
 
@@ -248,6 +258,7 @@ function animate() {
             if (elapsed - lastAttackTime > attackCooldown) {
                 playerHealthRef.value -= 10;
                 updateHealthDisplay();
+                showDamageEffect(); // 顯示紅色遮罩效果
                 lastAttackTime = elapsed;
                 if (playerHealthRef.value <= 0) {
                     gameOver({
