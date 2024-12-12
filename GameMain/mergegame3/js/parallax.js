@@ -53,7 +53,9 @@ async function getHeadPosition() {
 
 export function setupRenderer() {
     const container = document.getElementById('container');
-    renderer = new THREE.WebGLRenderer({ antialias: true });
+    // renderer = new THREE.WebGLRenderer({ antialias: true });
+    //use high performance
+    renderer = new THREE.WebGLRenderer({powerPreference: "high-performance"});
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     // renderer.setAnimationLoop(parallaxAnimate);
