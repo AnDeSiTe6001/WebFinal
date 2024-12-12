@@ -154,7 +154,7 @@ Object.values(buttons).forEach((button) => {
         });
 
         // 顯示狙擊鏡游標
-        document.body.style.cursor = 'url("images/crosshair.png") 16 16, auto';
+        document.body.style.cursor = 'url("./images/crosshair32.png") 16 16, auto';
     });
 });
 
@@ -229,7 +229,7 @@ pauseButton.addEventListener('click', () => {
 resumeButton.addEventListener('click', () => {
     resumeGame({ isPausedRef, clock, pauseOverlay, animate });
     // 恢復遊戲時顯示狙擊鏡游標
-    document.body.style.cursor = 'url("images/crosshair.png") 16 16, auto';
+    document.body.style.cursor = 'url("images/crosshair32.png") 16 16, auto';
 });
 
 playAgainButton.addEventListener('click', () => {
@@ -249,9 +249,9 @@ playAgainButton.addEventListener('click', () => {
         lastSpawnTimeRef,
         clock,
         animate
-    });
+    }); 
     // 顯示狙擊鏡游標
-    document.body.style.cursor = 'url("images/crosshair.png") 16 16, auto';
+    document.body.style.cursor = "url('images/crosshair32.png'), auto";
 });
 
 chooseDifficultyButton.addEventListener('click', () => {
