@@ -110,7 +110,7 @@ export class Monster {
                     
                     this.mixer.addEventListener('finished', () => {
                         this.isHit = false;
-                        console.log('Hit count:', this.hitCount);
+                        // console.log('Hit count:', this.hitCount);
                         if (this.hitCount >= this.health) {
                             this.remove(this.scene); // Remove monster after second hit
                         } else {

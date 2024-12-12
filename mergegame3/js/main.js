@@ -24,7 +24,7 @@ import { parllaxInit,
     preParallaxAnimate,
     postParallaxAnimate
 } from './parallax.js';
-// 初始化場景和相機
+// init scene and camera
 const scene = createBackground();
 // const camera = createCamera();
 setupParallaxScene(scene);
@@ -144,7 +144,7 @@ Object.values(buttons).forEach((button) => {
         console.log(`Difficulty selected: ${difficulty}`);
         console.log(`spawnInterval: ${spawnInterval}, monsterSpeed: ${monsterSpeed}, scoreMultiplier: ${scoreMultiplierRef.value}`);
         console.log(`monsterHealth: ${monsterHealth}`);
-        
+
         // Reset lastAttackTime
         lastAttackTime = 0;
         startGame({
@@ -179,9 +179,10 @@ function spawnMonster() {
         monsters.push(monster);
         // console.log('Monster spawned:', monster);
     }, () => {
-        // Remove monster from the monsters array
         monsters = monsters.filter(m => m !== monster);
-        console.log('Monster removed from array:', monster);
+        scoreRef.value += 1;
+        updateScoreFunc(scoreRef.value, scoreMultiplierRef.value, scoreDisplay, 1);
+        // console.log('Monster removed from array:', monster);
     });
 }
 
@@ -297,7 +298,7 @@ pauseButton.addEventListener('click', () => {
 
 resumeButton.addEventListener('click', () => {
     resumeGame({ isPausedRef, clock, pauseOverlay, animate });
-    // 恢復遊戲時顯示狙���鏡游標
+    // 恢復遊戲時顯示狙擊鏡游標
     document.body.style.cursor = 'url("images/crosshair32.png") 16 16, auto';
 });
 
