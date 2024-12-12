@@ -4,17 +4,20 @@ import { GLTFLoader } from 'https://unpkg.com/three@0.150.1/examples/jsm/loaders
 import { AnimationMixer, AnimationUtils } from 'three';
 
 export class Monster {
-    constructor(scene, speed = 5, playerPosition = new THREE.Vector3(0, 5, 20), onLoadCallback = () => {}) {
+    constructor(scene, speed = 5, health = 2, playerPosition = new THREE.Vector3(0, 5, 20), onLoadCallback = () => {}, onRemoveCallback = () => {}) {
         this.scene = scene;
         this.speed = speed;
         this.loader = new GLTFLoader();
         this.mixer = null;
         this.mesh = null;
         this.onLoadCallback = onLoadCallback;
+        this.onRemoveCallback = onRemoveCallback; // Add onRemove callback
         this.playerPosition = playerPosition.clone();
         this.collisionDistance = 12; // Use the same stoppingDistance
         this.stoppingDistance = 10; // Adjust as needed
         this.isHit = false; // Add hit state
+        this.hitCount = 0; // Initialize hit count
+        this.health = health;
 
         // Calculate spawn position relative to the player's position
         const spawnDistance = 40;
@@ -42,10 +45,10 @@ export class Monster {
             'assets/models/monster/zombie_snapper.glb', 
             (gltf) => {
                 this.mesh = gltf.scene;
-                console.log('Loaded Monster Mesh:', this.mesh);
+                // console.log('Loaded Monster Mesh:', this.mesh);
 
                 // 若模型太大，微調縮��比例
-                const scale = 0.015 + Math.random() * 0.015; // 隨機大小範圍為 0.015 至 0.025
+                const scale = 0.015 + Math.random() * 0.015; // 隨機大��範圍為 0.015 至 0.025
                 this.mesh.scale.set(scale, scale, scale);
 
                 // Set the position of the mesh
@@ -81,7 +84,7 @@ export class Monster {
                 // 如果有動畫則播放
                 if (gltf.animations && gltf.animations.length > 0) {
                     this.mixer = new AnimationMixer(this.mesh);
-                    console.log('Available animations:', gltf.animations.map(clip => clip.name));
+                    // console.log('Available animations:', gltf.animations.map(clip => clip.name));
 
                     const fullClip = gltf.animations[0];
 
@@ -104,6 +107,16 @@ export class Monster {
                     this.hitAction = this.mixer.clipAction(hitClip);
                     this.hitAction.setLoop(THREE.LoopOnce);
                     this.hitAction.clampWhenFinished = true;
+                    
+                    this.mixer.addEventListener('finished', () => {
+                        this.isHit = false;
+                        console.log('Hit count:', this.hitCount);
+                        if (this.hitCount >= this.health) {
+                            this.remove(this.scene); // Remove monster after second hit
+                        } else {
+                            this.walkAction.reset().play();
+                        }
+                    });
 
                     // Add mixer to scene's userData.mixers for updating
                     this.scene.userData.mixers = this.scene.userData.mixers || [];
@@ -114,7 +127,7 @@ export class Monster {
                 this.onLoadCallback();
             },
             (xhr) => {
-                console.log(`Loading monster: ${(xhr.loaded / xhr.total * 100).toFixed(2)}% loaded`);
+                // console.log(`Loading monster: ${(xhr.loaded / xhr.total * 100).toFixed(2)}% loaded`);
             },
             (error) => {
                 console.error('Error loading monster model:', error);
@@ -122,17 +135,14 @@ export class Monster {
         );
     }
 
-    // Add hit method
+    // Modify hit method
     hit() {
-        if (this.hitAction && !this.isHit) {
+        if (this.hitAction && this.hitCount < this.health) {
+            this.hitCount += 1; // Increment hit count
             this.isHit = true;
             this.walkAction.stop();
             this.hitAction.reset().play();
             this.hitAction.clampWhenFinished = true;
-            this.hitAction.onFinished = () => {
-                this.isHit = false;
-                this.walkAction.reset().play();
-            };
         }
     }
 
@@ -216,6 +226,7 @@ export class Monster {
                 }
             }
             this.mesh = null;
+            this.onRemoveCallback(); // Invoke the callback when removed
         }
     }
 }

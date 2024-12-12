@@ -24,7 +24,7 @@ import { parllaxInit,
     preParallaxAnimate,
     postParallaxAnimate
 } from './parallax.js';
-// 初始化場景���相機
+// 初始化場景和相機
 const scene = createBackground();
 // const camera = createCamera();
 setupParallaxScene(scene);
@@ -44,6 +44,7 @@ const sniperScope = document.getElementById('sniper-scope');
 let monsters = [];
 let spawnInterval = 2; 
 let monsterSpeed = 5; 
+let monsterHealth = 2;
 let lastSpawnTime = 0;
 let isGameOver = false;
 let isPaused = false;
@@ -133,14 +134,19 @@ function updateHealthDisplay() {
 Object.values(buttons).forEach((button) => {
     button.addEventListener('click', (event) => {
         const difficulty = event.target.dataset.difficulty;
+        console.log('Difficulty selected:', difficulty);
         const settings = getDifficultySettings(difficulty);
         spawnInterval = settings.spawnInterval;
         monsterSpeed = settings.monsterSpeed;
+        monsterHealth = settings.monsterHealth;
         scoreMultiplierRef.value = settings.scoreMultiplier;
 
         console.log(`Difficulty selected: ${difficulty}`);
         console.log(`spawnInterval: ${spawnInterval}, monsterSpeed: ${monsterSpeed}, scoreMultiplier: ${scoreMultiplierRef.value}`);
-
+        console.log(`monsterHealth: ${monsterHealth}`);
+        
+        // Reset lastAttackTime
+        lastAttackTime = 0;
         startGame({
             isStartedRef,
             isPausedRef,
@@ -169,9 +175,13 @@ Object.values(buttons).forEach((button) => {
 function spawnMonster() {
     const playerPosition = camera.position.clone();
 
-    const monster = new Monster(scene, monsterSpeed, playerPosition, () => {
+    const monster = new Monster(scene, monsterSpeed, monsterHealth, playerPosition, () => {
         monsters.push(monster);
-        console.log('Monster spawned:', monster);
+        // console.log('Monster spawned:', monster);
+    }, () => {
+        // Remove monster from the monsters array
+        monsters = monsters.filter(m => m !== monster);
+        console.log('Monster removed from array:', monster);
     });
 }
 
@@ -205,12 +215,12 @@ function shootLaser(startPosition, targetPosition) {
 
     // 添加雷射線到場景
     scene.add(laserMesh);
-    console.log('Laser added to scene:', laserMesh);
+    // console.log('Laser added to scene:', laserMesh);
 
     // 設置雷射線自動移除
     setTimeout(() => {
         scene.remove(laserMesh);
-        console.log('Laser removed from scene');
+        // console.log('Laser removed from scene');
     }, 50); // 雷射線顯示時間（毫秒）
 }
 
@@ -287,7 +297,7 @@ pauseButton.addEventListener('click', () => {
 
 resumeButton.addEventListener('click', () => {
     resumeGame({ isPausedRef, clock, pauseOverlay, animate });
-    // 恢復遊戲時顯示狙擊鏡游標
+    // 恢復遊戲時顯示狙���鏡游標
     document.body.style.cursor = 'url("images/crosshair32.png") 16 16, auto';
 });
 
@@ -360,12 +370,12 @@ window.addEventListener('click', (event) => {
     if (intersects.length > 0) {
         // 取第一個交點作為目標點
         targetPosition = intersects[0].point;
-        console.log('Mouse click target:', targetPosition);
+        // console.log('Mouse click target:', targetPosition);
     } else {
         // 如果沒有交點，則設置一個遠處的目標點
         const direction = raycaster.ray.direction.clone().normalize();
         targetPosition = startPosition.clone().add(direction.multiplyScalar(1000)); // 遠處目標
-        console.log('Mouse click far target:', targetPosition);
+        // console.log('Mouse click far target:', targetPosition);
     }
 
     // 發射雷射線
@@ -376,12 +386,8 @@ window.addEventListener('click', (event) => {
     monsters.forEach(monster => {
         const distance = raycaster.ray.distanceToPoint(monster.mesh.position);
         if (distance <= hitTolerance) {
-            // monster.hit(); // Trigger hit animation
-            monster.remove(scene); // Remove monster from scene
-            monsters = monsters.filter(m => m !== monster); // Remove monster from array
-            const basePoints = 10;
-            scoreRef.value = updateScoreFunc(scoreRef.value, scoreMultiplierRef.value, scoreDisplay, basePoints);
-            console.log('Monster hit:', monster);
+            monster.hit(); // Trigger hit method
+            // console.log('Monster hit:', monster);
         }
     });
 });
