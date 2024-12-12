@@ -1,5 +1,12 @@
 // js/main.js
-import { createBackground, createCamera } from './Background.js';
+import { 
+    createBackgroundCampfire,
+    createBackgroundDefault, 
+    createBackgroundIllusion,
+    // createBackgroundPrison,
+    createBackgroundDesert,
+} from './Background.js';
+
 import { Monster } from './Monster.js';
 import { 
     createPauseButton, 
@@ -25,7 +32,7 @@ import { parllaxInit,
     postParallaxAnimate
 } from './parallax.js';
 // init scene and camera
-const scene = createBackground();
+let scene = createBackgroundDefault();
 // const camera = createCamera();
 setupParallaxScene(scene);
 const gameCamera = setupParallaxCameras(scene);
@@ -136,6 +143,13 @@ Object.values(buttons).forEach((button) => {
         const difficulty = event.target.dataset.difficulty;
         console.log('Difficulty selected:', difficulty);
         const settings = getDifficultySettings(difficulty);
+        if (difficulty === 'easy') {
+            scene = createBackgroundCampfire();
+        } else if (difficulty === 'normal') {
+            scene = createBackgroundDesert();
+        } else if (difficulty === 'hard') {
+            scene = createBackgroundIllusion();
+        }
         spawnInterval = settings.spawnInterval;
         monsterSpeed = settings.monsterSpeed;
         monsterHealth = settings.monsterHealth;
@@ -328,7 +342,7 @@ playAgainButton.addEventListener('click', () => {
         updateHealthDisplay
     }); 
     // 顯示狙擊鏡游標
-    document.body.style.cursor = "url('images/crosshair32.png'), auto";
+    document.body.style.cursor = "url('images/crosshair32.png') 16 16, auto";
 });
 
 chooseDifficultyButton.addEventListener('click', () => {
