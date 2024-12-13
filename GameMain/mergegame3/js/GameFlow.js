@@ -79,7 +79,7 @@ export function resumeGame({ isPausedRef, clock, pauseOverlay, animate }) {
     }
 }
 
-export async function gameOver({
+export function gameOver({
     isGameOverRef,
     isPausedRef,
     clock,
@@ -97,14 +97,13 @@ export async function gameOver({
     isGameOverRef.value = true;
     isPausedRef.value = true;
     clock.stop();
-    // scoreRef.value+=1;
-    finalScore.innerText = `Your Score: ${Math.round(scoreRef.value)}`;
-
-
-    const updatedHighScores = updateHighScores(scoreRef.value);
-    displayLeaderboard(updatedHighScores);
     
     let _score = Math.round(scoreRef.value);
+    finalScore.innerText = `Your Score: ${_score}`;
+
+    const updatedHighScores = updateHighScores(_score);
+    displayLeaderboard(updatedHighScores);
+    
     console.log(_score);
     let _player_id = player_id;
     // await UpdateScoreDB(_score, _player_id);
@@ -118,4 +117,5 @@ export async function gameOver({
 
     pauseButton.style.display = 'none';
     scoreDisplay.style.display = 'none';
+    return _score;
 }

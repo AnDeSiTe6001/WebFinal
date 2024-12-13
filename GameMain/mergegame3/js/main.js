@@ -286,7 +286,7 @@ async function animate() {
                 showDamageEffect(); // 顯示紅色遮罩效果
                 lastAttackTime = elapsed;
                 if (playerHealthRef.value <= 0) {
-                    await gameOver({
+                    let _score = gameOver({
                         isGameOverRef,
                         isPausedRef,
                         clock,
@@ -301,9 +301,8 @@ async function animate() {
                         scoreDisplay,
                         playerid
                     });
-                    //console.log(`(UpdateScore)Final Score: ${Math.round(scoreRef.value)} id:${playerid}`);
-                    console.log(`(UpdateScore)Final Score: ${Math.round(scoreRef.value)} id:${playerid}`);
-                    // GameFunction.UpdateScore(Math.round(scoreRef.value),playerid);
+                    console.log(`(UpdateScore)Final Score: ${_score} id:${playerid}`);
+                    await GameFunction.UpdateScore(_score,playerid);
                     await updateHistoryHighestScore(playerid).then(()=>{
                         HighestText.innerText = `Highest Score: ${playerHistoryHighestScore}`;
                     });
