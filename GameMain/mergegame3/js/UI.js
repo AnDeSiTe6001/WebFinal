@@ -87,7 +87,7 @@ export function createStartScreen() {
 
     const HighestText = document.createElement('p');
     HighestText.innerText = `Highest Score:`;
-    overlay.appendChild(HighestText);
+    //overlay.appendChild(HighestText);
     // 難度選擇容器
     const difficultyContainer = document.createElement('div');
     // ��用 class 取代 inline style

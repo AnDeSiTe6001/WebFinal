@@ -31,6 +31,7 @@ import { parllaxInit,
     preParallaxAnimate,
     postParallaxAnimate
 } from './parallax.js';
+import * as GameFunction from '../../API/GameFunction.js';
 // init scene and camera
 let scene = createBackgroundDefault();
 // const camera = createCamera();
@@ -76,7 +77,7 @@ const clock = new THREE.Clock();
 const leaderboard = new Leaderboard();
 
 // UI 元素
-const { overlay: startScreen, buttons } = createStartScreen();
+const { overlay: startScreen, buttons, HighestText } = createStartScreen();
 const pauseButton = createPauseButton();
 pauseButton.style.display = 'none';
 const { overlay: pauseOverlay, resumeButton } = createPauseOverlay();
@@ -85,6 +86,13 @@ const scoreDisplay = createScoreDisplay();
 scoreDisplay.style.display = 'none';
 const healthDisplay = createHealthDisplay();
 healthDisplay.style.display = 'block';
+
+let playerid = parseInt(document.getElementById("PlayerID").innerText);
+let playerHistoryHighestScore = -1;
+async function updateHistoryHighestScore(playerid){
+    playerHistoryHighestScore = await GameFunction.GetHighestScore(playerid);
+    console.log(`(updateHistoryHighestScore) score:${playerHistoryHighestScore}`);
+}
 
 function updateHighScores(newScore) {
     return leaderboard.updateHighScores(newScore);
@@ -194,8 +202,8 @@ function spawnMonster() {
         // console.log('Monster spawned:', monster);
     }, () => {
         monsters = monsters.filter(m => m !== monster);
-        scoreRef.value += 1;
-        updateScoreFunc(scoreRef.value, scoreMultiplierRef.value, scoreDisplay, 1);
+        // scoreRef.value += 1;
+        scoreRef.value = updateScoreFunc(scoreRef.value, scoreMultiplierRef.value, scoreDisplay, 1);
         // console.log('Monster removed from array:', monster);
     });
 }
@@ -249,7 +257,7 @@ function showDamageEffect() {
     }, 100); // 持續 300 毫秒
 }
 
-function animate() {
+async function animate() {
     if (isPausedRef.value || isGameOverRef.value || !isStartedRef.value) return;
 
     requestAnimationFrame(animate);
@@ -278,7 +286,7 @@ function animate() {
                 showDamageEffect(); // 顯示紅色遮罩效果
                 lastAttackTime = elapsed;
                 if (playerHealthRef.value <= 0) {
-                    gameOver({
+                    await gameOver({
                         isGameOverRef,
                         isPausedRef,
                         clock,
@@ -290,7 +298,14 @@ function animate() {
                         displayLeaderboard,
                         gameOverOverlay,
                         pauseButton,
-                        scoreDisplay
+                        scoreDisplay,
+                        playerid
+                    });
+                    //console.log(`(UpdateScore)Final Score: ${Math.round(scoreRef.value)} id:${playerid}`);
+                    console.log(`(UpdateScore)Final Score: ${Math.round(scoreRef.value)} id:${playerid}`);
+                    // GameFunction.UpdateScore(Math.round(scoreRef.value),playerid);
+                    await updateHistoryHighestScore(playerid).then(()=>{
+                        HighestText.innerText = `Highest Score: ${playerHistoryHighestScore}`;
                     });
                 }
             }
@@ -314,6 +329,7 @@ resumeButton.addEventListener('click', () => {
     resumeGame({ isPausedRef, clock, pauseOverlay, animate });
     // 恢復遊戲時顯示狙擊鏡游標
     document.body.style.cursor = 'url("images/crosshair32.png") 16 16, auto';
+    lastAttackTime = 0;
 });
 
 playAgainButton.addEventListener('click', () => {
@@ -408,7 +424,9 @@ window.addEventListener('click', (event) => {
 });
 
 
-
+await updateHistoryHighestScore(playerid).then(()=>{
+    HighestText.innerText = `Highest Score: ${playerHistoryHighestScore}`;
+});
 animate();
 
 window.addEventListener('resize', () => {
@@ -416,4 +434,3 @@ window.addEventListener('resize', () => {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
-

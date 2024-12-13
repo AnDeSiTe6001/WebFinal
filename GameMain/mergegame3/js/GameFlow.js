@@ -1,5 +1,25 @@
 // js/GameFlow.js
-
+async function UpdateScoreDB(score, playerid) {
+    const response = await fetch("http://localhost/GameMain/API/UpdateScore.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        action: "ScoreUpdate",
+        curScore: score,
+        id: playerid,
+      }),
+    })
+    if (!response.ok) throw new Error("Network response was not OK");
+    const data = await response.text();
+    if (data) {
+      console.log(data);
+    } else {
+      console.error("Unexpected response format:", data);
+      alert("Unexpected response from server.");
+    }
+}
 export function startGame({
     isStartedRef,
     isPausedRef,
@@ -59,7 +79,7 @@ export function resumeGame({ isPausedRef, clock, pauseOverlay, animate }) {
     }
 }
 
-export function gameOver({
+export async function gameOver({
     isGameOverRef,
     isPausedRef,
     clock,
@@ -71,19 +91,28 @@ export function gameOver({
     displayLeaderboard,
     gameOverOverlay,
     pauseButton,
-    scoreDisplay
+    scoreDisplay,
+    player_id
 }) {
     isGameOverRef.value = true;
     isPausedRef.value = true;
     clock.stop();
-
-    monsters.forEach(m => m.remove(scene));
-    monsters.length = 0;
-
+    // scoreRef.value+=1;
     finalScore.innerText = `Your Score: ${Math.round(scoreRef.value)}`;
+
 
     const updatedHighScores = updateHighScores(scoreRef.value);
     displayLeaderboard(updatedHighScores);
+    
+    let _score = Math.round(scoreRef.value);
+    console.log(_score);
+    let _player_id = player_id;
+    // await UpdateScoreDB(_score, _player_id);
+    
+    monsters.forEach(m => m.remove(scene));
+    monsters.length = 0;
+
+
 
     gameOverOverlay.style.display = 'flex';
 

@@ -1,5 +1,4 @@
 // js/UI.js
-
 export function createPauseButton() {
     const button = document.createElement('button');
     button.innerHTML = '&#10073;&#10073;'; // 暫停圖示「||」
@@ -86,6 +85,9 @@ export function createStartScreen() {
     title.innerText = 'MONSTER SHOOTER';
     overlay.appendChild(title);
 
+    const HighestText = document.createElement('p');
+    HighestText.innerText = `Highest Score:`;
+    //overlay.appendChild(HighestText);
     // 難度選擇容器
     const difficultyContainer = document.createElement('div');
     // ��用 class 取代 inline style
@@ -110,11 +112,18 @@ export function createStartScreen() {
         buttons[level] = button;
     });
 
+    const LogoutBtn = document.createElement("button");
+    LogoutBtn.innerText = "Logout";
+    LogoutBtn.onclick = function () {
+    window.location.href = "../logout.php";
+    };
+    difficultyContainer.appendChild(LogoutBtn);
+    
     overlay.appendChild(difficultyContainer);
 
     document.body.appendChild(overlay);
 
-    return { overlay, buttons };
+    return { overlay, buttons, HighestText };
 }
 
 

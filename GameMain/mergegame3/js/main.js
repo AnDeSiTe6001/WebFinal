@@ -202,8 +202,8 @@ function spawnMonster() {
         // console.log('Monster spawned:', monster);
     }, () => {
         monsters = monsters.filter(m => m !== monster);
-        scoreRef.value += 1;
-        updateScoreFunc(scoreRef.value, scoreMultiplierRef.value, scoreDisplay, 1);
+        // scoreRef.value += 1;
+        scoreRef.value = updateScoreFunc(scoreRef.value, scoreMultiplierRef.value, scoreDisplay, 1);
         // console.log('Monster removed from array:', monster);
     });
 }
@@ -286,7 +286,7 @@ async function animate() {
                 showDamageEffect(); // 顯示紅色遮罩效果
                 lastAttackTime = elapsed;
                 if (playerHealthRef.value <= 0) {
-                    gameOver({
+                    await gameOver({
                         isGameOverRef,
                         isPausedRef,
                         clock,
@@ -298,10 +298,12 @@ async function animate() {
                         displayLeaderboard,
                         gameOverOverlay,
                         pauseButton,
-                        scoreDisplay
+                        scoreDisplay,
+                        playerid
                     });
                     //console.log(`(UpdateScore)Final Score: ${Math.round(scoreRef.value)} id:${playerid}`);
-                    await GameFunction.UpdateScore(Math.round(scoreRef.value),playerid);
+                    console.log(`(UpdateScore)Final Score: ${Math.round(scoreRef.value)} id:${playerid}`);
+                    // GameFunction.UpdateScore(Math.round(scoreRef.value),playerid);
                     await updateHistoryHighestScore(playerid).then(()=>{
                         HighestText.innerText = `Highest Score: ${playerHistoryHighestScore}`;
                     });
@@ -327,6 +329,7 @@ resumeButton.addEventListener('click', () => {
     resumeGame({ isPausedRef, clock, pauseOverlay, animate });
     // 恢復遊戲時顯示狙擊鏡游標
     document.body.style.cursor = 'url("images/crosshair32.png") 16 16, auto';
+    lastAttackTime = 0;
 });
 
 playAgainButton.addEventListener('click', () => {

@@ -118,7 +118,7 @@ function addEventListeners() {
     // // document.getElementById('smoothFactorSlider').addEventListener('input', updateSmoothFactor); // New event listener
     // document.getElementById('KalmanRSlider').addEventListener('input', updateKalmanR);
     // document.getElementById('KalmanQSlider').addEventListener('input', updateKalmanQ);
-    document.getElementById('flipHorizontalSwitch').addEventListener('change', updateFlipHorizontal); // New event listener
+    // document.getElementById('flipHorizontalSwitch').addEventListener('change', updateFlipHorizontal); // New event listener
 }
 
 function updateParallaxCoef(event) {
