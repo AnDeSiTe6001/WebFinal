@@ -113,7 +113,7 @@
         <span style="position: relative; right: 80px; top: 10px">Flip Horizontal</span>
     </div>
 
-    <p id="PlayerID"> ID: <?php echo htmlspecialchars($userinfo['PlayerID']) ?> </p>
+    <p id="PlayerID"><?php echo htmlspecialchars($userinfo['PlayerID']) ?> </p>
     <script type="importmap">
         {
             "imports": {

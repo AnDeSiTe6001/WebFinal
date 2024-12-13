@@ -31,9 +31,12 @@ if ($method === 'POST') { // create account
                         exit;
                     }else{
                         // user is not exists
-                    
-                        $sql = "INSERT INTO users (email, full_name, Password) VALUES ('{$_POST['email']}', '{$_POST['name']}', '{$_POST['password']}')";
-                        $result = mysqli_query($conn, $sql);
+                        $hashedPassword = password_hash($_POST['password'], PASSWORD_DEFAULT);
+                        $sql = "INSERT INTO users (email, full_name, Password) VALUES (?, ?, ?)";
+                        $stmt = mysqli_prepare($conn, $sql);
+                        mysqli_stmt_bind_param($stmt, "sss",$_POST['email'],$_POST['name'],$hashedPassword);
+                        $result = mysqli_stmt_execute($stmt);
+
                         if ($result) {
                             $sql = "SELECT id FROM users WHERE full_name = ?";
                             $stmt = mysqli_prepare($conn, $sql);
@@ -92,17 +95,8 @@ if ($method === 'POST') { // create account
                     $result = mysqli_stmt_get_result($stmt);
                     $row = mysqli_fetch_assoc($result);
 
-                    if($_GET['password'] === $row['Password']){
+                    if(password_verify($_GET['password'], $row['Password'])){
                         $_SESSION['Login_Method'] = 'General';
-
-                        /*$sql = "SELECT full_name FROM users WHERE email = ?";
-                        $stmt = mysqli_prepare($conn, $sql);
-                        mysqli_stmt_bind_param($stmt, "s", $email);
-                        mysqli_stmt_execute($stmt);
-                        $result = mysqli_stmt_get_result($stmt);
-                        
-                        $row = mysqli_fetch_assoc($result);*/
-
                         $_SESSION['Login_Name'] = $email;
 
                         header("Content-Type: application/json");
