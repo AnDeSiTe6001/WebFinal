@@ -93,14 +93,10 @@
     <div id="damage-overlay"></div>
     <!-- <div id="info"><a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - portal</div> -->
     <span style="position: absolute; top: 18px; right: 80px;">Debug Mode</span>
-    <div style="position: absolute; top: 50px; right: 10px;">
+    <!-- <div style="position: absolute; top: 50px; right: 10px;">
         <input type="range" id="ParallaxCoefSlider" min="0.0001" max="0.008" step="0.0001" value="0.004">
         <span>Parallax Coefficient</span>
     </div>
-    <!-- <div style="position: absolute; top: 90px; right: 10px;">
-        <input type="range" id="smoothFactorSlider" min="0.1" max="1.0" step="0.1" value="0.3">
-        <span>smoothFactor</span>
-    </div> -->
     <div style="position: absolute; top: 90px; right: 10px;">
         <input type="range" id="KalmanRSlider" min="0.001" max="0.1" step="0.001" value="0.06">
         <span>Kalman R</span>
@@ -108,13 +104,13 @@
     <div style="position: absolute; top: 130px; right: 10px;">
         <input type="range" id="KalmanQSlider" min="0.01" max="1.0" step="0.01" value="0.3">
         <span>Kalman Q</span>
-    </div>
+    </div> -->
     <div style="position: absolute; top: 170px; right: 10px;">
         <label class="switch">
             <input type="checkbox" id="flipHorizontalSwitch">
             <span class="slider round"></span>
         </label>
-        <span>Flip Horizontal</span>
+        <span style="position: relative; right: 80px; top: 10px">Flip Horizontal</span>
     </div>
 
     <p id="PlayerID"> ID: <?php echo htmlspecialchars($userinfo['PlayerID']) ?> </p>
